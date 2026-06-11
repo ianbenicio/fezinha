@@ -27,6 +27,25 @@ async def detalhe_time(team_id: int, _: CurrentUser = UserDep):
     return {"time": time.data, "jogadores": jogadores.data or []}
 
 
+@router.get("/matches/{match_id}")
+async def detalhe_partida(match_id: int, _: CurrentUser = UserDep):
+    sb = get_service_client()
+    m = sb.table("matches").select("*").eq("id", match_id).single().execute()
+    if not m.data:
+        raise HTTPException(404, "Partida não encontrada")
+    partida = dict(m.data)
+    ids = [partida["home_team_id"], partida["away_team_id"]]
+    times = sb.table("teams").select("id, nome, slug, escudo_url, caracteristicas").in_("id", ids).execute()
+    by_id = {t["id"]: t for t in (times.data or [])}
+    partida["mandante"] = by_id.get(partida["home_team_id"])
+    partida["visitante"] = by_id.get(partida["away_team_id"])
+    # local aproximado: cidade do mandante (sem estádio no schema ainda)
+    mand = partida["mandante"] or {}
+    car = mand.get("caracteristicas") or {}
+    partida["local"] = f'{car.get("cidade", "?")}/{car.get("estado", "")}'.strip("/")
+    return {"partida": partida}
+
+
 @router.get("/matches")
 async def listar_partidas(
     _: CurrentUser = UserDep,
