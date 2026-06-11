@@ -4,7 +4,9 @@ Cada camada do Fezinha é um **contrato fechado** em YAML. Objetivo: foco e dire
 
 Padrão completo: [`docs/spec/secao-36-propriedades-camadas.md`](../docs/spec/secao-36-propriedades-camadas.md)
 
-## Status: 18 camadas + módulo banca — todas definidas
+## Status: 18 camadas de análise + 6 módulos de governança/decisão — todos definidos
+
+Pipeline completo: análise (18 camadas) → fusão (qualidade → agregador → confiança → alertas) → decisão (banca) → aprendizado (checagem_resultados).
 
 ### Núcleo Estatístico (lente: força/distribuição)
 | Arquivo | Camada | Motor | Papel |
@@ -36,10 +38,19 @@ Padrão completo: [`docs/spec/secao-36-propriedades-camadas.md`](../docs/spec/se
 | `consenso_externo.yaml` | Consenso | formula | sites de palpite (candidata a poda) |
 | `visao_casas.yaml` | Visão das Casas | llm (haiku) | editorial/estrutural, sem números de odd |
 
-### Governança / Decisão
+### Governança de Fusão
+| Arquivo | Módulo | Motor | Papel |
+|---------|--------|-------|-------|
+| `qualidade_dados.yaml` | Qualidade dos Dados | formula | nota 0-5 por camada; afeta confiança, não a prob |
+| `agregador.yaml` | Agregador | formula | stacking + calibração isotônica; o único ponto de fusão |
+| `indice_confianca.yaml` | Índice de Confiança | formula | quanto confiar na previsão (entropia + alinhamento) |
+| `alertas.yaml` | Alertas | formula | registro central dos ALERTA_*; pode barrar entrada |
+
+### Decisão / Aprendizado
 | Arquivo | Módulo | Motor | Papel |
 |---------|--------|-------|-------|
 | `banca.yaml` | Gerenciamento de Banca | formula | EV + ½ Kelly + perfis de risco; recomenda e registra |
+| `checagem_resultados.yaml` | Checagem / Feedback | híbrido (sonnet) | post-mortem por jogo; calibração mensal por lote |
 
 ## Mercados-alvo (decisão do dono)
 1X2 · Over/Under gols (+ BTTS + mercados de tempo 1ºT/2ºT) · Escanteios O/U. Sem cartões nesta fase.

@@ -1,0 +1,77 @@
+# Módulo: Índice de Confiança (seção 21) — governança
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Mede se a previsão final é sustentável. Probabilidade != confiança.
+# Flamengo 58% com escalação incerta e odd caindo contra = confiança baixa.
+
+id: indice_confianca
+nucleo: governanca
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Quanto confiar na previsão final, além da probabilidade em si?"
+
+# ── CÁLCULO (seção 21, com entropia da §29.6) ───────────
+formula:
+  indice: >
+    0.25*qualidade_dados + 0.25*alinhamento_camadas +
+    0.20*estabilidade_odds + 0.15*clareza_escalacao + 0.15*entropia_norm
+  componentes:
+    qualidade_dados: "média ponderada das notas (qualidade_dados.yaml)"
+    alinhamento_camadas: "camadas apontam o mesmo lado?"
+    estabilidade_odds: "odds paradas vs em movimento forte (movimento_mercado)"
+    clareza_escalacao: "escalação confirmada vs incerta (elenco_impacto)"
+    entropia_norm: "concentração da distribuição final (substitui dist. probabilística)"
+
+# ── INTERPRETAÇÃO ───────────────────────────────────────
+faixas:
+  "0.80-1.00": alta
+  "0.60-0.79": media_alta
+  "0.45-0.59": media
+  "0.30-0.44": baixa
+  "<0.30": muito_baixa
+
+# fatores que reduzem (registrados na saída)
+reduz_confianca:
+  - escalacao_incerta
+  - odds_em_movimento_forte
+  - modelo_diverge_do_mercado
+  - poucas_fontes
+  - muitos_desfalques
+  - classico_instavel
+  - dados_incompletos
+  - probabilidades_proximas
+
+inputs_permitidos:
+  - qualidade_dados
+  - prob_por_camada             # para medir alinhamento
+  - prob_final                  # para entropia
+  - estabilidade_odds
+  - status_escalacao
+inputs_proibidos:
+  - resultado_real
+fonte_minima: 1
+
+output_schema:
+  indice: 0.0                   # 0-1
+  faixa: [alta, media_alta, media, baixa, muito_baixa]
+  componentes: {}               # cada fator e seu valor
+  fatores_reducao: [string]
+  recomendacao_prudencia: ""    # ex: "alta incerteza, reduzir exposição"
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - apresentar_como_certeza     # seção 27 — sempre probabilístico
+  - leitura_subjetiva
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: governanca
+podavel: false
+qualidade_min: 0
+modelo_llm: null

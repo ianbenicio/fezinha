@@ -1,0 +1,63 @@
+# Módulo: Qualidade dos Dados (seção 20) — governança
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Nota 0-5 por camada. NÃO altera a previsão da camada; altera a CONFIANÇA final.
+# Roda sobre cada camada antes do agregador.
+
+id: qualidade_dados
+nucleo: governanca
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Quão confiáveis são os dados que cada camada usou neste jogo?"
+
+# ── 5 CRITÉRIOS (seção 20) ──────────────────────────────
+criterios:
+  atualidade: "os dados são recentes?"
+  cobertura: "há dados suficientes para a partida?"
+  confiabilidade: "as fontes são confiáveis?"
+  clareza: "os dados são objetivos ou ambíguos?"
+  consistencia: "fontes diferentes apontam na mesma direção?"
+
+# ── ESCALA ──────────────────────────────────────────────
+escala:
+  5: "dados fortes e atualizados"
+  4: "dados bons, pequenas lacunas"
+  3: "utilizáveis, mas incompletos"
+  2: "frágeis"
+  1: "insuficientes"
+  0: "camada indisponível"
+
+inputs_permitidos:
+  - metadados_de_cada_camada    # frescor, nº fontes, flags de evidência
+  - flags_nao_verificado        # de fatos/visao_time/etc.
+inputs_proibidos:
+  - probabilidade_da_camada     # não lê a previsão, só a qualidade do dado
+  - resultado_real
+fonte_minima: 1
+
+output_schema:
+  por_camada:
+    - camada: ""
+      nota: 0                   # 0-5
+      criterio_mais_fraco: [atualidade, cobertura, confiabilidade, clareza, consistencia]
+      motivo: ""
+      limitacoes: [string]
+  alerta: [ok, ALERTA_DADOS_FRACOS]   # qualquer camada essencial < 3
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - alterar_previsao_camada     # só afeta confiança, não a prob
+  - leitura_subjetiva
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: governanca
+podavel: false
+qualidade_min: 0
+modelo_llm: null

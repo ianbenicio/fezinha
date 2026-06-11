@@ -1,0 +1,74 @@
+# Módulo: Alertas (seção 22) — governança
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Registro central. Coleta os ALERTA_* gerados pelas camadas e o do sistema.
+# Cada alerta vem com ação recomendada. Não gera previsão; sinaliza risco.
+
+id: alertas
+nucleo: governanca
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Há risco ou inconsistência que deva reduzir confiança ou barrar a entrada?"
+
+# ── CATÁLOGO DE ALERTAS ─────────────────────────────────
+catalogo:
+  ALERTA_ODDS:
+    gatilho: "prob de mercado diverge >12 p.p. do ModeloProprio"
+    origem: [odds, agregador]
+  ALERTA_ESCALACAO:
+    gatilho: "jogadores-chave em dúvida ou escalação não confirmada"
+    origem: [elenco_impacto]
+  ALERTA_DIVERGENCIA_FONTES:
+    gatilho: "consenso externo diverge >15 p.p. do ModeloProprio"
+    origem: [consenso_externo]
+  ALERTA_DADOS_FRACOS:
+    gatilho: "camada essencial com qualidade < 3"
+    origem: [qualidade_dados]
+  ALERTA_MOVIMENTO_MERCADO:
+    gatilho: "variação de prob ajustada por odds >= 5 p.p."
+    origem: [movimento_mercado]
+  ALERTA_JOGO_INSTAVEL:
+    gatilho: "clássico, troca de técnico, crise, muitos desfalques"
+    origem: [contexto_competitivo, fatos_relevantes]
+  ALERTA_DESFALQUE_SUBPRECIFICADO:
+    gatilho: "impacto calculado diverge da reação do mercado"
+    origem: [elenco_impacto]
+  ALERTA_DIVERGENCIA_INTERNA:
+    gatilho: "ordered_logit diverge forte do Dixon-Coles"
+    origem: [ordered_logit]
+
+inputs_permitidos:
+  - alertas_das_camadas
+  - divergencias_do_agregador
+  - notas_qualidade_dados
+inputs_proibidos:
+  - resultado_real
+fonte_minima: 1
+
+output_schema:
+  alertas:
+    - tipo: ""
+      camada_afetada: ""
+      descricao: ""
+      impacto_confianca: [reduz, neutro]
+      acao_recomendada: [manter, reduzir_confianca, revisar_dados, aguardar_escalacao, recalcular_camada, evitar_entrada]
+  total_alertas: 0
+  bloqueia_entrada: [sim, nao]   # alerta crítico → banca não recomenda
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - alterar_previsao
+  - leitura_subjetiva
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: governanca
+podavel: false
+qualidade_min: 0
+modelo_llm: null

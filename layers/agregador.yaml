@@ -1,0 +1,94 @@
+# Módulo: Agregador (seção 29) — governança de fusão
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# O CORAÇÃO DA FUSÃO. Junta os outputs de todas as camadas na probabilidade
+# final calibrada, por mercado. Pesos APRENDIDOS (stacking), não opinião.
+# É o ÚNICO ponto onde as camadas se encontram (regra de ouro).
+
+id: agregador
+nucleo: governanca
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Como fundir as camadas na probabilidade final calibrada de cada mercado?"
+
+# ── MÉTODO (seção 29) ───────────────────────────────────
+metodo:
+  primario: stacking            # regressão logística multinomial
+  features: "outputs de todas as camadas (1 por mercado)"
+  alvo: "resultado real (minimiza log loss)"
+  calibracao: isotonic_regression   # previsão de 60% vence ~60% das vezes
+  validacao: walk_forward       # treina passado, aplica futuro, nunca embaralha
+  retreino: "a cada lote (checagem_resultados, mensal/piso 40)"
+
+# ── FALLBACK (enquanto não há histórico) ────────────────
+fallback:
+  modo: pesos_fixos             # seção 25
+  pesos:
+    modelo_proprio: 0.55
+    odds: 0.30
+    consenso: 0.15
+  nota: "registra modo ativo na saída; meta é migrar para stacking"
+
+# ── PODA DE CAMADAS ─────────────────────────────────────
+poda:
+  criterio: "coeficiente ~0 estável em 2+ janelas de validação"
+  acao: "remove do agregador; camada continua calculada e registrada"
+  candidatas_conhecidas: [consenso_externo, h2h, visao_casas]
+
+# ── AJUSTES CONTEXTUAIS (não-probabilísticos) ───────────
+# Camadas que geram ajuste/direção (não prob) entram aqui como modificadores.
+ajustes:
+  intensidade: [contexto_competitivo, metadados, clima, arbitragem]
+  fisico: [metadados]
+  alvo_do_ajuste: "λ e distribuição, antes da calibração final"
+
+inputs_permitidos:
+  - prob_por_camada             # 1X2, gols, escanteios de cada camada
+  - ajustes_contextuais
+  - qualidade_dados             # pondera confiança, não a prob
+  - pesos_treinados             # do stacking
+inputs_proibidos:
+  - resultado_pos_fato          # nunca usa o real para a previsão
+fonte_minima: 1
+
+# ── MULTI-MERCADO: saída final calibrada ────────────────
+output_schema:
+  resultado:
+    prob_casa: 0.0
+    prob_empate: 0.0
+    prob_visitante: 0.0
+    resultado_mais_provavel: ""
+  gols:
+    over_15: 0.0
+    over_25: 0.0
+    over_35: 0.0
+    btts: 0.0
+  escanteios:
+    over_85: 0.0
+    over_95: 0.0
+    over_105: 0.0
+  meta:
+    modo: [stacking, pesos_fixos_fallback]
+    pesos_em_uso: {}
+    data_ultimo_treino: "YYYY-MM-DD"
+    camadas_ativas: [string]
+    camadas_podadas: [string]
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - prob_nao_calibrada
+  - peso_inventado              # pesos vêm de treino ou fallback documentado
+  - usar_resultado_real
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: fusao             # é o agregador; não tem peso, define os pesos
+podavel: false
+qualidade_min: 1
+modelo_llm: null
