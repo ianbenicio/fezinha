@@ -23,6 +23,8 @@ dist/
 .turbo/
 npm-debug.log*
 yarn-error.log*
+next-env.d.ts
+.env.local
 
 # Supabase local
 .branches/
