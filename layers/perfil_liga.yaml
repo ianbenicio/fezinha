@@ -1,0 +1,103 @@
+# Camada: Perfil de Liga / Campeonato (prior de calibração)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+#
+# PAPEL ESPECIAL: não é camada de previsão de partida. É PRIOR de calibração.
+# Fornece os baselines da liga que alimentam o λ base do Dixon-Coles e a
+# confiança dos mercados. NÃO entra no agregador como previsão — calibra o núcleo.
+# Por isso não viola a regra de ouro: entrega parâmetros de liga (constantes),
+# não análise do jogo específico.
+#
+# MULTILIGAS-READY: schema aceita N ligas. Fase inicial: só brasileirao_serie_a.
+
+id: perfil_liga
+nucleo: calibracao
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Quais os priors comportamentais e baselines DESTA liga, por mercado?"
+
+# ── PRIORIDADES (o mais eficiente primeiro) ─────────────
+# Ordenadas por impacto na precisão de previsão.
+prioridades:
+  - media_gols_liga         # PRIOR do λ Dixon-Coles. O mais importante.
+  - fator_casa_liga         # vantagem média do mandante na liga
+  - baseline_over_btts      # % histórico de over por linha + % BTTS da liga
+  - media_escanteios_liga   # baseline do Poisson de escanteios
+  - previsibilidade         # favorito vence muito? (calibra confiança: liga "cavalar" x zebreira)
+
+# ── SUPORTE (segundo plano) ─────────────────────────────
+# Refina, não decide. Ativado quando os priors acima já estão calibrados.
+suporte:
+  - gols_por_tempo          # split 1ºT/2ºT (alimenta mercados de tempo)
+  - estilo_medio_ritmo      # ritmo/posse média da liga
+  - sazonalidade            # início x fim de temporada, decisão x meio-tabela
+  - disciplina_cartoes      # cartões/jogo (futuro — mercado não priorizado)
+
+escopo:
+  - caracteristicas_agregadas_da_liga
+  - baselines_por_mercado
+  - priors_para_calibracao
+
+fora_de_escopo:
+  - analise_de_partida_especifica   # → núcleo + camadas contextuais
+  - forca_de_time_individual        # → pi_ratings
+  - contexto_de_um_jogo             # → contexto_competitivo
+
+inputs_permitidos:
+  - historico_agregado_temporadas   # várias temporadas da liga
+  - tabela_estatistica_da_liga
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+  - dados_de_partida_individual      # prior é da LIGA, não do jogo
+fonte_minima: 1
+janela_temporal: "3_temporadas"      # média móvel de comportamento da liga
+
+# ── MULTI-LIGA / MULTI-MERCADO ──────────────────────────
+output_schema:
+  liga_id: brasileirao_serie_a       # fase inicial; expansível
+  gols:
+    media_gols_jogo: 0.0             # prior do λ
+    pct_over_05: 0.0
+    pct_over_15: 0.0
+    pct_over_25: 0.0
+    pct_over_35: 0.0
+    pct_btts: 0.0
+    split_1t_2t: [0.0, 0.0]          # suporte
+  escanteios:
+    media_escanteios_jogo: 0.0
+    pct_over_85: 0.0
+    pct_over_95: 0.0
+    pct_over_105: 0.0
+  resultado:
+    fator_casa: 0.0                  # vantagem mandante média
+    pct_vitoria_mandante: 0.0
+    pct_empate: 0.0
+  previsibilidade:
+    indice_favoritismo: 0.0          # 1 = favorito quase sempre vence; 0 = caótica
+    leitura: [cavalar, equilibrada, zebreira]
+
+campo_leitura:
+  ativo: false                       # fórmula determinística
+
+output_proibido:
+  - probabilidade_de_partida         # entrega priors, não previsão de jogo
+  - analise_subjetiva
+max_output_tokens: 0
+
+exige_evidencia: true                # todo baseline rastreia as temporadas-fonte
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: calibracao             # não tem peso no agregador; calibra o núcleo
+podavel: false                       # prior estrutural
+qualidade_min: 3                     # liga sem histórico suficiente → fallback média global
+modelo_llm: null
+
+# ── REGISTRO DE LIGAS ───────────────────────────────────
+ligas_ativas:
+  - brasileirao_serie_a
+ligas_planejadas:                    # ativar após validação dos métodos
+  - brasileirao_serie_b
+  - ligas_alto_over                  # ex: vietnamita — perfil de muito gol (método Marcelo)

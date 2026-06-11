@@ -1,0 +1,61 @@
+# Camada: Clima Real do Jogo (seção 25)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Condições no estádio na hora do jogo. Fórmula pura. Afeta gols/ritmo.
+
+id: clima
+nucleo: contextual
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "As condições climáticas no jogo reduzem gols e intensidade esperados?"
+
+prioridades:
+  - chuva_forte             # campo pesado, jogo truncado
+  - calor_umidade_extremos  # reduz intensidade no 2º tempo
+  - vento_forte             # afeta bola aérea, escanteios, cruzamentos
+
+escopo:
+  - previsao_no_horario_local
+  - chuva_vento_temperatura_umidade
+
+fora_de_escopo:
+  - clima_medio_cidade      # precisa ser do jogo, não média
+  - altitude                # → metadados
+  - forca_times
+
+inputs_permitidos:
+  - previsao_meteorologica_horario_estadio
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+  - contexto_subjetivo
+fonte_minima: 1
+janela_temporal: "horario_do_jogo"
+
+output_schema:
+  temperatura: 0
+  umidade: 0
+  chuva: [nenhuma, leve, forte]
+  vento: [calmo, moderado, forte]
+  impacto:
+    efeito_gols: 0.0          # chuva/calor → -gols esperados
+    efeito_escanteios: 0.0    # vento → +/- escanteios
+    efeito_intensidade: 0.0
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - probabilidade_final
+  - leitura_subjetiva
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: baixo
+podavel: true
+qualidade_min: 3
+modelo_llm: null

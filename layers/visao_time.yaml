@@ -1,0 +1,69 @@
+# Camada: Visão do Time (seção 34)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+
+id: visao_time
+nucleo: contextual
+motor: llm
+versao: "1.0"
+
+pergunta_unica: "O próprio clube sinaliza prioridade reduzida ou máxima para ESTE jogo?"
+
+escopo:
+  - declaracao_tecnico_prioridade   # "vamos poupar", "jogo da nossa vida"
+  - sinal_poupar_titulares          # confirmado/sinalizado em coletiva
+  - foco_outra_competicao           # declaração explícita
+  - logistica_diferenciada          # viagem antecipada, concentração especial
+  - historico_tecnico_situacao      # costuma poupar antes de decisão?
+
+fora_de_escopo:
+  - escalacao_confirmada            # → camada elenco_impacto (consome este sinal)
+  - lesao_suspensao                 # → camada elenco_impacto
+  - especulacao_imprensa            # não é fala oficial; ignorar
+  - odds_movimento                  # → camada odds
+
+inputs_permitidos:
+  - coletivas_oficiais
+  - declaracoes_diretoria
+  - canais_oficiais_clube
+inputs_proibidos:
+  - odds
+  - palpites_externos
+  - output_outras_camadas
+  - especulacao_sem_fala_oficial
+fonte_minima: 1
+janela_temporal: "120h"             # semana do jogo
+
+output_schema:
+  mandante:
+    prioridade: [maxima, normal, reduzida, indefinida]
+    sinais: [string]                # lista curta de evidências
+  visitante:
+    prioridade: [maxima, normal, reduzida, indefinida]
+    sinais: [string]
+  status: [antecipado, consumido]   # consumido quando escalação oficial sai
+  qualidade_dados: 0                # 0-5
+
+campo_leitura:
+  ativo: true
+  max_palavras: 50
+  regra: "cita a declaração; sem inferir intenção não dita"
+
+output_proibido:
+  - probabilidade
+  - prosa_narrativa
+  - inferencia_sem_declaracao
+max_output_tokens: 500
+
+exige_evidencia: true
+sem_evidencia: marcar_baixa_confianca
+proibe_especulacao: true
+granularidade: especifica           # "poupar 3 titulares p/ final de quarta", não "rodar elenco"
+
+# regra especial: ao sair escalação oficial, status vira "consumido"
+# e a camada NÃO entra no agregador daquele jogo (info absorvida por elenco_impacto)
+consumida_por: elenco_impacto
+
+peso_inicial: medio
+podavel: true
+qualidade_min: 3
+modelo_llm: haiku

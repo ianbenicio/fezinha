@@ -1,0 +1,68 @@
+# Camada: Tática e Matchup (seção 25, item 4)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# HÍBRIDA: números (PPDA, posse, etc.) vêm de fórmula; só a LEITURA do matchup é LLM.
+
+id: tatica_matchup
+nucleo: contextual
+motor: hibrido
+versao: "1.0"
+
+pergunta_unica: "O estilo de jogo de um time anula ou potencializa o do outro?"
+
+escopo:
+  - matchup_posse_vs_bloco          # time de posse x bloco baixo
+  - pressao_alta_vs_saida_curta     # PPDA de um x construção do outro
+  - transicao_vs_linha_alta         # contra-ataque x defesa adiantada
+  - bola_parada                     # vantagem ofensiva/defensiva em set pieces
+
+fora_de_escopo:
+  - forca_geral_time                # → núcleo estatístico
+  - jogadores_individuais           # → camada elenco_impacto
+  - forma_recente                   # → núcleo estatístico
+
+# parte FÓRMULA: métricas calculadas, alimentam a leitura
+metricas_formula:
+  - ppda                            # passes permitidos por ação defensiva
+  - posse_media
+  - pct_pressao_alta
+  - taxa_contra_ataque
+  - xg_bola_parada
+
+inputs_permitidos:
+  - metricas_formula                # números já calculados (acima)
+  - estilo_historico_temporada
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+  - probabilidade_estatistica       # LLM não vê a prob; só os números de estilo
+fonte_minima: 1
+janela_temporal: "temporada_atual"
+
+# parte LLM: recebe os números, devolve leitura estruturada
+output_schema:
+  vantagem_mandante: [string]       # fatores táticos pró-mandante
+  vantagem_visitante: [string]
+  matchup_resultado: [vantagem_mandante, equilibrio, vantagem_visitante]
+  intensidade: [leve, moderada, forte]
+  qualidade_dados: 0                # 0-5
+
+campo_leitura:
+  ativo: true
+  max_palavras: 50
+  regra: "ancora em métrica específica; ex 'PPDA 8.2 do mandante pressiona saída curta do visitante'"
+
+output_proibido:
+  - probabilidade_1x2               # não gera prob; gera leitura de matchup
+  - prosa_narrativa
+  - afirmacao_sem_metrica
+max_output_tokens: 500
+
+exige_evidencia: true               # toda afirmação aponta uma métrica
+sem_evidencia: marcar_baixa_confianca
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: medio
+podavel: true
+qualidade_min: 3
+modelo_llm: sonnet                  # raciocínio sobre números > extração; vale o upgrade

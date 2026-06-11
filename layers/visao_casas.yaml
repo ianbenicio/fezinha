@@ -1,0 +1,61 @@
+# Camada: Visão das Casas de Apostas (seção 33)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# ATENÇÃO: esta camada NÃO usa números de odds (isso é da camada `odds`).
+# Captura só conteúdo editorial e sinais estruturais.
+
+id: visao_casas
+nucleo: externo
+motor: llm
+versao: "1.0"
+
+pergunta_unica: "Que sinal editorial/estrutural as casas emitem sobre esta partida, fora a odd?"
+
+escopo:
+  - analise_editorial_casa          # blog/prévia oficial da própria casa
+  - jogo_promovido                  # destaque/promoção = casa espera volume
+  - mercado_suspenso                # casa incerta sobre informação
+  - limite_de_aposta_baixo          # casa desconfia da própria linha
+  - boost_super_odd                 # onde a casa aceita risco
+
+fora_de_escopo:
+  - valor_da_odd                    # → camada odds
+  - movimento_da_odd                # → camada movimento_mercado
+  - palpites_sites_externos         # → camada consenso_externo
+
+inputs_permitidos:
+  - blogs_previas_oficiais_casas
+  - estado_mercados_observavel      # aberto/suspenso, limites, boosts
+inputs_proibidos:
+  - odds                            # CRÍTICO: nenhum número de odd aqui
+  - movimento_odds
+  - palpites_externos
+  - output_outras_camadas
+fonte_minima: 1
+janela_temporal: "48h"
+
+output_schema:
+  leitura_editorial_dominante: [pro_mandante, pro_visitante, neutra, dividida]
+  sinais_estruturais: [string]      # ex: ["mercado de cartões suspenso", "boost no over 2.5"]
+  direcao: [pro_mandante, pro_visitante, neutra, dividida]
+  qualidade_dados: 0                # 0-5
+
+campo_leitura:
+  ativo: true
+  max_palavras: 50
+  regra: "descreve o sinal estrutural observado; nunca cita valor de odd"
+
+output_proibido:
+  - probabilidade
+  - valor_numerico_de_odd           # proibição reforçada
+  - prosa_narrativa
+max_output_tokens: 400
+
+exige_evidencia: true
+sem_evidencia: marcar_baixa_confianca
+proibe_especulacao: true
+granularidade: especifica           # "mercado de escanteios suspenso na Bet365", não "casas cautelosas"
+
+peso_inicial: baixo
+podavel: true                       # forte candidata a poda se redundante com odds
+qualidade_min: 3
+modelo_llm: haiku

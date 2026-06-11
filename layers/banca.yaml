@@ -1,0 +1,137 @@
+# Módulo: Gerenciamento de Banca (governança, pós-agregador)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# NÃO é camada de análise. É o módulo de DECISÃO: aposto? quanto?
+# Roda DEPOIS do agregador. Transforma probabilidade calibrada em recomendação.
+# Modo: recomenda + registra (backtest e ROI real). Nunca aposta sozinho.
+
+id: banca
+nucleo: governanca
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Dada a prob do modelo e a odd, vale apostar — e quanto, segundo o perfil de risco?"
+
+# ── FÓRMULAS BASE ───────────────────────────────────────
+formulas:
+  ev: "EV = prob_modelo * odd - 1"
+  kelly_full: "f = (b*p - q) / b ; b = odd-1 ; p = prob_modelo ; q = 1-p"
+  stake: "stake = fracao_kelly * kelly_full * banca ; respeitando caps do perfil"
+
+# ── PERFIS DE RISCO (eixo conservador → agressivo) ──────
+# Usuário escolhe UM perfil. O pacote inteiro é aplicado.
+perfil_ativo: moderado
+
+perfis:
+  conservador:
+    ev_minimo: 0.10          # só entra com >=10% de vantagem
+    fracao_kelly: 0.25       # 1/4 Kelly
+    cap_por_aposta: 0.02     # 2% da banca
+    cap_por_rodada: 0.08     # 8% da banca
+    multiplas:
+      permite: true
+      exige_todas_pernas_ev_positivo: true
+      max_pernas: 2
+    confianca_minima: 0.60   # índice de confiança (seção 21)
+
+  moderado:                  # ½ Kelly — decisão default
+    ev_minimo: 0.05
+    fracao_kelly: 0.50
+    cap_por_aposta: 0.05
+    cap_por_rodada: 0.20
+    multiplas:
+      permite: true
+      exige_todas_pernas_ev_positivo: true
+      max_pernas: 3
+    confianca_minima: 0.45
+
+  agressivo:
+    ev_minimo: 0.02
+    fracao_kelly: 0.75
+    cap_por_aposta: 0.10
+    cap_por_rodada: 0.40
+    multiplas:
+      permite: true
+      exige_todas_pernas_ev_positivo: false   # permite, mas mostra o risco
+      max_pernas: 4
+    confianca_minima: 0.30
+
+# ── MÚLTIPLAS (método Marcelo, com risco visível) ───────
+multiplas_regra:
+  prob_combinada: "produto das probabilidades das pernas"
+  ev_combinado: "produto das odds * prob_combinada - 1"
+  sempre_mostrar:
+    - prob_combinada
+    - ev_combinado
+    - comparacao_vs_singles      # múltipla rende mais que as singles separadas?
+    - perfil_de_risco            # agressivo/conservador da combinação
+
+inputs_permitidos:
+  - prob_calibrada_agregador     # output final do agregador
+  - indice_confianca             # seção 21
+  - odds_disponiveis             # camada odds
+  - banca_atual
+  - perfil_risco_usuario
+inputs_proibidos:
+  - probabilidade_nao_calibrada  # só age sobre output final calibrado
+fonte_minima: 1
+
+# ── MULTI-MERCADO: recomenda em todos os mercados ───────
+output_schema:
+  recomendacoes:
+    - mercado: [1x2, over_under_gols, escanteios]
+      selecao: ""                # ex: "Over 2.5", "Casa", "Over 9.5 escanteios"
+      prob_modelo: 0.0
+      odd: 0.0
+      ev: 0.0
+      stake_sugerido: 0.0        # % da banca, já com cap do perfil
+      confianca: 0.0
+      decisao: [apostar, evitar, aguardar_escalacao]
+  multipla_sugerida:             # se aplicável ao perfil
+    pernas: [string]
+    prob_combinada: 0.0
+    ev_combinado: 0.0
+    melhor_que_singles: [sim, nao]
+    perfil: [conservador, moderado, agressivo]
+  exposicao_rodada: 0.0          # % total comprometido na rodada
+  perfil_em_uso: ""
+
+# ── REGISTRO (backtest + ROI real) ──────────────────────
+registro:
+  ativo: true
+  schema_aposta:
+    data: "YYYY-MM-DD"
+    jogo: ""
+    mercado: ""
+    selecao: ""
+    odd: 0.0
+    stake: 0.0
+    ev_estimado: 0.0
+    perfil: ""
+    confianca: 0.0
+    resultado: [green, red, void, pendente]
+    retorno: 0.0
+  metricas_acompanhadas:
+    - roi_real
+    - yield
+    - clv                        # closing line value (seção 24)
+    - drawdown_maximo
+    - acerto_por_mercado
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - aposta_automatica            # só recomenda; humano executa
+  - recomendar_abaixo_do_ev_minimo
+  - ignorar_cap_de_exposicao
+max_output_tokens: 0
+
+exige_evidencia: true            # toda recomendação rastreia prob, odd e EV
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: decisao            # não entra no agregador; age depois dele
+podavel: false
+qualidade_min: 3                 # confiança/qualidade baixa → "evitar" ou "aguardar"
+modelo_llm: null

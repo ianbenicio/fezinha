@@ -1,0 +1,64 @@
+# Camada: Histórico de Confrontos Diretos / H2H (seção 31)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# "Retrospecto" (Marcelo citou). Fórmula. Peso BAIXO, em prova — evidência fraca
+# após controlar força atual. Podada se stacking zerar coeficiente.
+
+id: h2h
+nucleo: contextual
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Há padrão recorrente no confronto direto, após controlar a força atual?"
+
+prioridades:
+  - freguesia_objetiva      # time X não vence Y há N jogos
+  - padrao_de_gols          # confronto historicamente de muitos/poucos gols
+  - padrao_mando            # mandante domina o confronto em casa
+
+escopo:
+  - resultados_confrontos_diretos
+  - padrao_placar_e_local
+
+fora_de_escopo:
+  - forca_atual             # → pi_ratings (H2H não substitui força)
+  - escalacao_atual
+  - contexto_competitivo
+
+inputs_permitidos:
+  - confrontos_ultimos_5_anos
+  - placares_e_local
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+  - jogos_mais_de_5_anos
+  - confrontos_natureza_diferente   # amistoso vs final
+fonte_minima: 4                     # <4 confrontos → qualidade máx 2
+janela_temporal: "5_anos"
+
+output_schema:
+  jogos_considerados: 0
+  retrospecto: { v_mandante: 0, empates: 0, v_visitante: 0 }
+  padrao_gols: [muitos, medio, poucos]
+  padrao_escanteios: [muitos, medio, poucos]
+  prob_casa: 0.0
+  prob_empate: 0.0
+  prob_visitante: 0.0
+  limitacoes: [string]              # elenco/técnico diferente desde último
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - leitura_subjetiva
+  - peso_alto                       # design: peso baixo
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: baixo
+podavel: true                       # forte candidata a poda
+qualidade_min: 2
+modelo_llm: null

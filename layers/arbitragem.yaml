@@ -1,0 +1,65 @@
+# Camada: Arbitragem (seção 25.6)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Perfil do árbitro. Fórmula pura. Afeta intensidade, faltas, pênaltis e ritmo.
+
+id: arbitragem
+nucleo: contextual
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "O perfil do árbitro altera o ritmo e os eventos esperados do jogo?"
+
+prioridades:
+  - tendencia_cartoes       # árbitro que distribui muito cartão
+  - tendencia_penaltis      # marca muito / pouco
+  - deixa_jogo_correr       # poucas faltas → jogo fluido → mais chances
+
+escopo:
+  - perfil_disciplinar_arbitro
+  - media_faltas_cartoes_penaltis
+  - impacto_ritmo
+
+fora_de_escopo:
+  - forca_times
+  - contexto_competitivo
+  - escalacao
+
+inputs_permitidos:
+  - historico_arbitro
+  - media_cartoes_por_jogo
+  - media_penaltis
+  - media_faltas
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+  - contexto_subjetivo
+fonte_minima: 1
+janela_temporal: "temporada_atual + anterior"
+
+output_schema:
+  arbitro: ""
+  perfil: [rigoroso, equilibrado, permissivo]
+  media_cartoes: 0.0
+  tendencia_penalti: [alta, media, baixa]
+  impacto:
+    ritmo: [trava_jogo, neutro, deixa_correr]
+    efeito_gols: 0.0          # jogo travado → leve -gols
+    efeito_escanteios: 0.0
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - probabilidade_final
+  - leitura_subjetiva
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: baixo
+podavel: true
+qualidade_min: 3
+modelo_llm: null

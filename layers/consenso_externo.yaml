@@ -1,0 +1,67 @@
+# Camada: Consenso de Fontes Externas (seção 25.7)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Agregação de sites de palpites (Forebet, PredictZ, etc.). Fórmula.
+# EM PROVA PERMANENTE — fontes derivam de stats públicas + odds (redundância).
+
+id: consenso_externo
+nucleo: externo
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "As fontes externas de palpite concordam — e em que direção?"
+
+# AVISO: baixo valor esperado. Sites derivam das mesmas stats + odds.
+# Informação provavelmente redundante. Stacking decide se fica.
+
+prioridades:
+  - direcao_consenso        # maioria aponta pra qual lado
+  - grau_de_concordancia    # fontes alinhadas vs divergentes
+  - divergencia_vs_modelo   # consenso muito longe do modelo → ALERTA
+
+escopo:
+  - agregacao_palpites_sites
+  - concordancia_entre_fontes
+
+fora_de_escopo:
+  - odds                    # → odds
+  - leitura_editorial_casas # → visao_casas
+  - analise_propria
+
+inputs_permitidos:
+  - palpites_multiplas_fontes   # Forebet, PredictZ, SportyTrader, APWin, WinDrawWin...
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+fonte_minima: 3
+janela_temporal: "snapshot_atual"
+
+output_schema:
+  resultado:
+    consenso_casa: 0.0
+    consenso_empate: 0.0
+    consenso_visitante: 0.0
+  gols:
+    consenso_over_25: 0.0
+  meta:
+    fontes_validas: 0
+    fontes_alinhadas: [string]
+    fontes_divergentes: [string]
+    alerta: [ok, ALERTA_DIVERGENCIA_FONTES]
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - leitura_subjetiva
+  - peso_alto               # design: baixo, redundância provável
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: baixo
+podavel: true               # candidata número 1 a poda
+qualidade_min: 2
+modelo_llm: null

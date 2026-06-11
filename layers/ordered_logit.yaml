@@ -1,0 +1,57 @@
+# Camada: Ordered Logit (seção 28.5)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# SANITY CHECK. Prevê 1X2 direto dos pi-ratings, sem passar por gols.
+# NÃO entra no agregador. Serve só para detectar divergência interna.
+
+id: ordered_logit
+nucleo: estatistico
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "A previsão 1X2 sem passar por gols diverge do Dixon-Coles?"
+
+prioridades:
+  - deteccao_divergencia    # se logit e Dixon-Coles discordam forte → alerta
+
+escopo:
+  - previsao_1x2_direta
+  - comparacao_com_dixon_coles
+
+fora_de_escopo:
+  - mercado_gols            # não modela gols
+  - mercado_escanteios
+  - entrada_no_agregador    # fora do agregador por design
+
+inputs_permitidos:
+  - pi_ratings              # parâmetros de força
+inputs_proibidos:
+  - odds
+  - output_outras_camadas_exceto_dixon_para_comparacao
+  - contexto_subjetivo
+fonte_minima: 1
+janela_temporal: "temporada_atual"
+
+output_schema:
+  prob_casa: 0.0
+  prob_empate: 0.0
+  prob_visitante: 0.0
+  divergencia_vs_dixon: 0.0   # p.p.
+  alerta: [ok, ALERTA_DIVERGENCIA_INTERNA]
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - peso_no_agregador       # é sanity check, não previsor
+  - leitura_subjetiva
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: zero          # fora do agregador
+podavel: false
+qualidade_min: 1
+modelo_llm: null

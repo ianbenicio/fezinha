@@ -1,0 +1,99 @@
+# Camada: Elenco / Impacto Individual (seção 30)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# A EDGE PRINCIPAL. Above replacement → ajuste no λ → recalcula todos os mercados.
+# HÍBRIDA: fórmula soma contribuições; LLM lê o impacto estrutural invisível.
+
+id: elenco_impacto
+nucleo: contextual
+motor: hibrido
+versao: "1.0"
+
+pergunta_unica: "O lineup confirmado muda a força esperada vs o time-base — e em quanto?"
+
+# 5 prioridades confirmadas — todas ativas
+prioridades:
+  - escalacao_alternativa_vs_titular  # sinal do Marcelo: time poupando = -força
+  - desfalque_peca_chave              # above replacement quantificado
+  - desfalque_estrutural_invisivel    # volante/zagueiro construtor = onde mora a edge
+  - retornos                          # craque volta = +força não precificada
+  - forca_do_banco                    # reposição forte vs frágil
+
+# ── MÉTRICA EM SEQUÊNCIA (plugável) ─────────────────────
+# Mesma interface (contribuicao/90); troca a fonte conforme valida no backtest.
+metrica:
+  nivel_ativo: 1
+  niveis:
+    1: { fonte: "FBref (xG + xA / 90)", custo: zero, status: ativo }
+    2: { fonte: "xT — Expected Threat (socceraction)", custo: medio, status: planejado }
+    3: { fonte: "VAEP (socceraction, event data)", custo: alto, status: planejado }
+  promocao: "subir de nível quando o backtest justificar o custo do dado"
+
+# ── ABOVE REPLACEMENT ───────────────────────────────────
+formula_impacto: "impacto = contribuicao(titular) - contribuicao(substituto_provavel)"
+ajuste_lambda:
+  destino: dixon_coles.lambda
+  cap: "±15% por jogo"
+
+escopo:
+  - escalacao_provavel_confirmada
+  - desfalques_retornos
+  - impacto_individual_above_replacement
+  - forca_relativa_do_lineup
+
+fora_de_escopo:
+  - forca_geral_historica   # → pi_ratings
+  - declaracao_prioridade   # → visao_time (sinal antecipado)
+  - contexto_tabela         # → contexto_competitivo
+  - tatica                  # → tatica_matchup
+
+inputs_permitidos:
+  - escalacao_oficial_ou_provavel
+  - contribuicao_jogadores    # xG+xA (nível 1) → xT/VAEP (2/3)
+  - minutos_jogados
+  - forca_adversarios_enfrentados
+inputs_proibidos:
+  - odds                      # mas COMPARA com movimento p/ alerta (no agregador)
+  - output_outras_camadas
+  - contexto_subjetivo_sem_dado
+fonte_minima: 1
+janela_temporal: "escalacao_do_jogo + janela_de_forma"
+
+# ── MULTI-MERCADO ───────────────────────────────────────
+output_schema:
+  mandante:
+    lineup_tipo: [titular_forte, misto, alternativo]
+    desfalques: [{jogador: "", impacto: 0.0, flag: [chave, estrutural, comum]}]
+    retornos: [{jogador: "", ganho: 0.0}]
+    forca_banco: [forte, media, fraca]
+  visitante:
+    lineup_tipo: [titular_forte, misto, alternativo]
+    desfalques: [{jogador: "", impacto: 0.0, flag: [chave, estrutural, comum]}]
+    retornos: [{jogador: "", ganho: 0.0}]
+    forca_banco: [forte, media, fraca]
+  ajuste:
+    delta_lambda_casa: 0.0      # vai p/ dixon_coles (gols)
+    delta_lambda_fora: 0.0
+    impacto_escanteios: 0.0     # perde cruzador → -escanteios
+    impacto_1x2: [pro_mandante, neutro, pro_visitante]
+  alerta: [ok, ALERTA_DESFALQUE_SUBPRECIFICADO, ALERTA_ESCALACAO]
+
+campo_leitura:
+  ativo: true                 # parte LLM: impacto estrutural que o número não pega
+  max_palavras: 50
+  regra: "cita o jogador e a métrica; ex 'volante X (0.3 VAEP/90) fora muda saída de bola'"
+
+output_proibido:
+  - probabilidade_final
+  - prosa_narrativa
+  - impacto_sem_metrica
+max_output_tokens: 500
+
+exige_evidencia: true
+sem_evidencia: marcar_baixa_confianca
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: alto            # a edge principal
+podavel: false                # núcleo da vantagem
+qualidade_min: 3              # escalação não confirmada → qualidade cai, alerta sobe
+modelo_llm: sonnet

@@ -1,0 +1,65 @@
+# Camada: Metadados (seção 25.5)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Logística objetiva do jogo: calendário, descanso, viagem. Fórmula pura.
+
+id: metadados
+nucleo: contextual
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Calendário, descanso e viagem favorecem fisicamente qual time?"
+
+prioridades:
+  - descanso_diferencial    # dias entre jogos: um time mais cansado
+  - maratona_jogos          # 3º jogo em 7 dias
+  - viagem_logistica        # distância, fuso, altitude
+  - mando_efetivo           # casa com torcida vs portões fechados
+
+escopo:
+  - dias_de_descanso
+  - congestionamento_calendario
+  - viagem_distancia_fuso
+  - altitude
+
+fora_de_escopo:
+  - peso_competitivo        # → contexto_competitivo
+  - escalacao               # → elenco_impacto
+  - clima_no_jogo           # → clima
+
+inputs_permitidos:
+  - calendario_times
+  - distancia_viagem
+  - altitude_estadio
+  - mando_de_campo
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+  - contexto_subjetivo
+fonte_minima: 1
+janela_temporal: "ultimas_2_semanas + proximo_jogo"
+
+output_schema:
+  mandante: { descanso_dias: 0, congestionamento: [alto, normal, baixo] }
+  visitante: { descanso_dias: 0, viagem: [longa, media, curta], altitude_delta: 0 }
+  ajuste:
+    vantagem_fisica: [pro_mandante, neutro, pro_visitante]
+    magnitude: [baixa, media, alta]
+    impacto_intensidade: 0.0   # cansaço → -gols/-escanteios no fim do jogo
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - probabilidade_final
+  - leitura_subjetiva
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: medio
+podavel: true
+qualidade_min: 3
+modelo_llm: null

@@ -1,0 +1,106 @@
+# Camada: Dixon-Coles + Poisson de Escanteios (seção 28.2)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# FÁBRICA DE MERCADOS. A matriz de placar gera 1X2, O/U gols, BTTS e mercados
+# de tempo de uma vez. Poisson gêmeo gera os mercados de escanteios.
+
+id: dixon_coles
+nucleo: estatistico
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Qual a distribuição de placares esperada — e os mercados que dela derivam?"
+
+# requisitos obrigatórios da seção 28.2
+requisitos:
+  rho: true                 # correção de dependência em placares baixos
+  decaimento_temporal: true # ξ — jogos recentes pesam mais
+  blend_xg: "0.70*xG + 0.30*gols_reais"
+
+# CADEIA DO λ (parâmetro central)
+lambda_pipeline:
+  base: perfil_liga.media_gols_jogo       # PRIOR da liga (calibração)
+  ajuste_forca: pi_ratings.ataque_defesa  # força do time
+  ajuste_escalacao: elenco_impacto.delta_lambda  # seção 30, cap ±15%
+  # NOTA: consome PARÂMETROS (prior, força, delta), não previsões de outras
+  # camadas. Cada um é número estrutural, não output de análise da partida.
+
+prioridades:
+  - placar_mais_provavel    # top 3 placares
+  - over_todas_as_linhas    # 0.5, 1.5, 2.5, 3.5 (dono: "quero todos")
+  - btts                    # ambos marcam
+  - mercados_de_tempo       # over 1ºT / 2ºT (dos bilhetes Betano)
+  - lambda_ajustado         # mostra quanto escalação mexeu vs base
+
+escopo:
+  - matriz_de_placar
+  - mercado_1x2
+  - mercado_over_under_gols
+  - mercado_btts
+  - mercado_gols_por_tempo
+  - mercado_escanteios      # Poisson gêmeo
+
+fora_de_escopo:
+  - contexto_competitivo    # ajuste de intensidade vem de outra camada, no agregador
+  - escalacao_em_si         # → elenco_impacto (só consome o delta do λ)
+  - odds                    # → camada odds
+
+inputs_permitidos:
+  - gols_marcados_sofridos
+  - xg_xga                  # para o blend
+  - escanteios_por_time     # para o Poisson gêmeo
+  - prior_liga              # perfil_liga (calibração)
+  - delta_lambda_escalacao  # elenco_impacto (parâmetro)
+  - forca_ataque_defesa     # pi_ratings (parâmetro)
+inputs_proibidos:
+  - odds
+  - probabilidade_outras_camadas
+  - contexto_subjetivo
+fonte_minima: 1
+janela_temporal: "temporada_atual + decaimento"
+
+# ── MULTI-MERCADO (todas as linhas) ─────────────────────
+output_schema:
+  resultado:
+    prob_casa: 0.0
+    prob_empate: 0.0
+    prob_visitante: 0.0
+  placar:
+    mais_provavel: "0x0"
+    top3: ["0x0", "0x0", "0x0"]
+  gols:
+    over_05: 0.0
+    over_15: 0.0
+    over_25: 0.0
+    over_35: 0.0
+    btts_sim: 0.0
+    lambda_casa: 0.0
+    lambda_fora: 0.0
+    lambda_vs_base: 0.0     # delta da escalação
+  tempo:
+    over_05_1t: 0.0
+    over_15_1t: 0.0
+    over_05_2t: 0.0
+    split_esperado: [0.0, 0.0]
+  escanteios:               # Poisson gêmeo, paralelo
+    total_esperado: 0.0
+    over_85: 0.0
+    over_95: 0.0
+    over_105: 0.0
+
+campo_leitura:
+  ativo: false              # fórmula determinística
+
+output_proibido:
+  - leitura_subjetiva
+  - ajuste_de_contexto      # contexto entra no agregador, não aqui
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: alto
+podavel: false              # espinha dorsal
+qualidade_min: 2
+modelo_llm: null

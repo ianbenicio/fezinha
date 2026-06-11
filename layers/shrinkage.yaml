@@ -1,0 +1,60 @@
+# Camada: Shrinkage Bayesiano (seção 28.4)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# MODIFICADOR, não previsor. Puxa parâmetros de times com pouca amostra
+# em direção à média da liga. Protege contra rating extremo de amostra pequena.
+
+id: shrinkage
+nucleo: estatistico
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "A amostra deste time é grande o suficiente para confiar no rating?"
+
+formula: "param_final = w*param_estimado + (1-w)*media_liga ; w = n/(n+k) ; k=8"
+
+prioridades:
+  - times_poucos_jogos      # promovidos, início de temporada
+  - elenco_reformulado      # pós-janela, muitos reforços
+  - retorno_de_parada       # data FIFA, recesso
+
+escopo:
+  - regularizacao_de_parametros
+  - peso_de_amostra
+
+fora_de_escopo:
+  - previsao_de_mercado     # não prevê; ajusta
+  - contexto_de_jogo
+
+inputs_permitidos:
+  - n_jogos_amostra
+  - parametros_pi_ratings
+  - media_liga              # perfil_liga (calibração)
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+  - contexto_subjetivo
+fonte_minima: 1
+janela_temporal: "temporada_atual"
+
+output_schema:
+  fator_w: 0.0              # 0 = puxa tudo p/ média; 1 = confia 100% no rating
+  parametros_ajustados: {}
+  motivo: [amostra_pequena, elenco_novo, amostra_ok]
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - probabilidade
+  - leitura_subjetiva
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: calibracao    # modifica o núcleo, sem peso próprio no agregador
+podavel: false
+qualidade_min: 1
+modelo_llm: null

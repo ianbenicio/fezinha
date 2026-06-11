@@ -1,0 +1,48 @@
+# Template de contrato de camada — Fezinha
+# Copie este arquivo para layers/<id>.yaml e preencha.
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+
+# ── IDENTIDADE ──────────────────────────────────────────
+id:                        # slug único (ex: fatos_relevantes)
+nucleo:                    # estatistico | contextual | externo | governanca
+motor:                     # formula | llm | hibrido
+versao: "1.0"
+
+# ── FOCO (anti-generalização) ───────────────────────────
+pergunta_unica:            # UMA pergunta. Nunca "analise o jogo".
+escopo:                    # o que a camada PODE tratar
+  -
+fora_de_escopo:            # o que delega a outra camada (sem dupla contagem)
+  -
+
+# ── CONTRATO DE DADOS ───────────────────────────────────
+inputs_permitidos:
+  -
+inputs_proibidos:          # SEMPRE inclui odds e output de outras camadas
+  - odds
+  - output_outras_camadas
+fonte_minima: 1            # nº mínimo de fontes verificáveis
+janela_temporal:           # ex: "72h", "5_anos", "temporada_atual"
+
+# ── SAÍDA (schema travado) ──────────────────────────────
+output_schema:             # só enum/número/lista (+ 1 campo leitura se LLM)
+  campo: tipo
+campo_leitura:             # só motor=llm; máx 50 palavras; exige evidência
+  ativo: false
+  max_palavras: 50
+output_proibido:
+  - probabilidade          # camadas que não geram prob
+  - texto_livre_longo
+max_output_tokens: 600
+
+# ── ANTI-GENERALIZAÇÃO ──────────────────────────────────
+exige_evidencia: true
+sem_evidencia: marcar_baixa_confianca   # NÃO descarta
+proibe_especulacao: true
+granularidade: especifica
+
+# ── GOVERNANÇA ──────────────────────────────────────────
+peso_inicial:              # baixo | medio | alto
+podavel: true
+qualidade_min: 3
+modelo_llm:                # só motor=llm: haiku | sonnet | opus | fable

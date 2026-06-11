@@ -1,0 +1,75 @@
+# Camada: Odds de Mercado (seção 25.8)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Probabilidade implícita do mercado, margem removida, média entre casas.
+# Fórmula. Multi-mercado. Benchmark mais duro do sistema (Pinnacle ~eficiente).
+
+id: odds
+nucleo: externo
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Qual a probabilidade real implícita do mercado, sem a margem da casa?"
+
+prioridades:
+  - prob_implicita_sem_margem   # remove vig, normaliza
+  - consenso_entre_casas        # média/mediana (Pinnacle, Bet365, Betano...)
+  - favorito_forte              # odd < 1.4 = ~71%+ (filtro do Marcelo)
+  - divergencia_vs_modelo       # gap modelo x mercado → valor ou alerta
+
+escopo:
+  - odds_brutas_por_mercado
+  - probabilidade_implicita
+  - remocao_de_margem
+  - agregacao_entre_casas
+
+fora_de_escopo:
+  - movimento_temporal          # → movimento_mercado
+  - leitura_editorial           # → visao_casas
+  - palpites_sites              # → consenso_externo
+
+inputs_permitidos:
+  - odds_multiplas_casas
+  - mercados: [1x2, over_under_gols, escanteios]
+inputs_proibidos:
+  - output_outras_camadas
+  - palpites_externos
+fonte_minima: 2                 # ao menos 2 casas para média confiável
+janela_temporal: "snapshot_atual"
+
+# ── MULTI-MERCADO ───────────────────────────────────────
+output_schema:
+  resultado:
+    prob_casa: 0.0
+    prob_empate: 0.0
+    prob_visitante: 0.0
+    favorito: ""
+    odd_favorito: 0.0
+    flag_favorito_forte: [sim, nao]   # odd < 1.4
+  gols:
+    prob_over_15: 0.0
+    prob_over_25: 0.0
+    prob_over_35: 0.0
+  escanteios:
+    prob_over_85: 0.0
+    prob_over_95: 0.0
+  meta:
+    casas_validas: 0
+    margem_media: 0.0
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - leitura_subjetiva
+  - probabilidade_com_margem    # sempre remover vig
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: alto              # benchmark forte
+podavel: false
+qualidade_min: 3
+modelo_llm: null

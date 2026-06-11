@@ -1,0 +1,92 @@
+# Camada: Contexto Competitivo / Situação do Jogo (NOVA)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# HÍBRIDA: fórmula lê tabela + regulamento (objetivo); LLM lê a nuance situacional.
+# Traduz "precisa vencer pra não cair" / "já classificado cumprindo tabela".
+# Afeta INTENSIDADE → muda gols, escanteios e direção 1X2 (ajuste no agregador).
+
+id: contexto_competitivo
+nucleo: contextual
+motor: hibrido
+versao: "1.0"
+
+pergunta_unica: "O que está em jogo para cada time muda a intensidade desta partida?"
+
+# 5 prioridades confirmadas — todas ativas
+prioridades:
+  - urgencia_por_pontos     # precisa vencer (Z4/título) → ataque total
+  - jogo_sem_objetivo       # já classificado / nada em jogo → morno
+  - classico_rivalidade     # imprevisível, +intensidade (Marcelo citou)
+  - mata_mata               # vantagem administra x precisa reverter
+  - decisao_direta          # confronto de 6 pontos entre rivais de objetivo
+
+# ── PARTE FÓRMULA (lê o objetivo) ───────────────────────
+fatos_formula:
+  - posicao_tabela
+  - distancia_g4_z4
+  - rodadas_restantes
+  - saldo_necessario
+  - estado_mata_mata        # ida/volta, vantagem acumulada
+  - eh_classico_regional    # flag de rivalidade
+
+# ── PARTE LLM (lê a nuance) ─────────────────────────────
+# Interpreta o que a tabela não diz: moral pós-classificação, pressão de
+# torcida documentada, "time jogando por orgulho", técnico pressionado.
+
+escopo:
+  - situacao_na_competicao
+  - peso_do_jogo_por_time
+  - rivalidade
+  - momento_psicologico_documentado
+
+fora_de_escopo:
+  - forca_do_time           # → pi_ratings
+  - escalacao               # → elenco_impacto
+  - declaracao_prioridade   # → visao_time
+  - lesao_suspensao         # → elenco_impacto
+
+inputs_permitidos:
+  - tabela_classificacao
+  - regulamento_competicao
+  - calendario_restante
+  - contexto_documentado    # pressão, rivalidade (para a parte LLM)
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+  - especulacao_sem_base
+fonte_minima: 1
+janela_temporal: "rodada_atual"
+
+# ── MULTI-MERCADO: gera AJUSTE de intensidade + direção ──
+output_schema:
+  mandante:
+    o_que_esta_em_jogo: [titulo, g4, meio_tabela, z4, nada]
+    urgencia: [maxima, alta, normal, baixa, nula]
+  visitante:
+    o_que_esta_em_jogo: [titulo, g4, meio_tabela, z4, nada]
+    urgencia: [maxima, alta, normal, baixa, nula]
+  ajuste_intensidade:       # alimenta o agregador (gols/escanteios)
+    direcao: [mais_intenso, neutro, menos_intenso]
+    magnitude: [baixa, media, alta]
+  classico: [sim, nao]
+  alerta: [ok, ALERTA_JOGO_INSTAVEL]
+
+campo_leitura:
+  ativo: true               # parte híbrida LLM
+  max_palavras: 50
+  regra: "ancora em posição/regulamento; nuance só se documentada"
+
+output_proibido:
+  - probabilidade_1x2_calibrada   # gera ajuste/direção, não prob final
+  - prosa_narrativa
+  - especulacao_psicologica_sem_fonte
+max_output_tokens: 400
+
+exige_evidencia: true
+sem_evidencia: marcar_baixa_confianca
+proibe_especulacao: true
+granularidade: especifica   # "precisa de 4 pts em 3 jogos p/ fugir do Z4", não "jogo importante"
+
+peso_inicial: medio
+podavel: true
+qualidade_min: 3
+modelo_llm: sonnet          # raciocínio situacional > extração

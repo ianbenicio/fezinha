@@ -1,0 +1,83 @@
+# Camada: pi-ratings (seção 28.1)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# LENTE ESTATÍSTICA PURA. NÃO conhece contexto, motivação ou situação do jogo.
+# Contexto competitivo é responsabilidade das camadas analíticas (metadados, contexto_competitivo).
+
+id: pi_ratings
+nucleo: estatistico
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "Qual a força relativa (casa/fora) dos times, por mercado?"
+
+# 5 prioridades confirmadas pelo dono — todas ativas
+prioridades:
+  - gap_de_forca            # favoritismo bruto (rating casa - rating fora)
+  - tendencia               # rating subindo/caindo nas últimas rodadas
+  - incerteza               # desvio Glicko alto = não confiar (promovido, poucos jogos)
+  - supremacia_de_gols      # ataque - defesa → direciona mercado O/U
+  - separacao_casa_fora     # gigante em casa x frágil fora (extremos)
+
+escopo:
+  - rating_resultado_casa_fora
+  - rating_ataque_defesa            # alimenta mercado de gols
+  - rating_escanteios               # GÊMEO próprio (gerados/concedidos)
+  - desvio_incerteza                # Glicko deviation
+
+fora_de_escopo:
+  - contexto_competitivo            # → camada contexto_competitivo (decisão, cumprir tabela)
+  - motivacao                       # → camadas analíticas/subjetivas
+  - escalacao                       # → camada elenco_impacto
+  - h2h                             # → camada h2h
+  - forma_recente                   # capturada pelo decaimento temporal interno
+
+inputs_permitidos:
+  - resultados_historicos
+  - gols_marcados_sofridos
+  - escanteios_gerados_concedidos   # dado próprio p/ rating de escanteios
+  - mando_de_campo
+inputs_proibidos:
+  - odds
+  - output_outras_camadas
+  - contexto_subjetivo              # CRÍTICO: pi_ratings não vê motivação/situação
+fonte_minima: 1
+janela_temporal: "temporada_atual + decaimento"
+
+# MULTI-MERCADO: a camada produz força para cada mercado, pela lente estatística
+output_schema:
+  resultado:
+    rating_casa: 0.0
+    rating_fora: 0.0
+    gap: 0.0
+    tendencia: [subindo, estavel, caindo]
+    separacao_casa_fora: [extrema, normal, baixa]
+  gols:
+    ataque_esperado_casa: 0.0
+    defesa_esperada_fora: 0.0
+    supremacia: 0.0                 # direção do mercado O/U
+  escanteios:
+    gerados_casa: 0.0
+    concedidos_fora: 0.0
+    total_esperado: 0.0
+  incerteza:
+    desvio_casa: 0.0
+    desvio_fora: 0.0
+    confianca_rating: [alta, media, baixa]
+
+campo_leitura:
+  ativo: false                      # camada de fórmula: sem texto livre
+
+output_proibido:
+  - probabilidade_final             # gera força/ratings, não prob calibrada (isso é Dixon-Coles + agregador)
+  - leitura_subjetiva
+max_output_tokens: 0                 # determinística, sem LLM
+
+exige_evidencia: true               # todo rating rastreia os jogos que o geraram
+sem_evidencia: nao_aplicavel        # fórmula não especula
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: alto
+podavel: false                      # núcleo — não pode ser podada
+qualidade_min: 2                    # com desvio alto, ainda entra mas com baixa confiança
+modelo_llm: null

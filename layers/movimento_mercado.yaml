@@ -1,0 +1,70 @@
+# Camada: Movimento de Mercado (seção 25)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Abertura vs odd atual. Fórmula. Movimento forte = informação nova entrou.
+# Frequentemente mais importante que a odd em si.
+
+id: movimento_mercado
+nucleo: externo
+motor: formula
+versao: "1.0"
+
+pergunta_unica: "O mercado comprou um lado desde a abertura — e isso sinaliza informação nova?"
+
+prioridades:
+  - direcao_movimento       # odd caindo = mercado comprou aquele lado
+  - magnitude_variacao      # >= 5 p.p. → ALERTA_MOVIMENTO_MERCADO
+  - momento_do_movimento    # movimento perto do jogo = escalação/notícia
+  - drop_steam              # queda abrupta = dinheiro pesado/informação
+
+escopo:
+  - odd_abertura_vs_atual
+  - variacao_percentual
+  - timing_do_movimento
+
+fora_de_escopo:
+  - valor_absoluto_odd      # → odds
+  - leitura_editorial       # → visao_casas
+  - causa_do_movimento      # inferência de causa → não especula aqui
+
+inputs_permitidos:
+  - odd_abertura
+  - odd_atual
+  - serie_temporal_odd
+inputs_proibidos:
+  - output_outras_camadas
+  - palpites_externos
+fonte_minima: 1
+janela_temporal: "abertura_ate_agora"
+
+output_schema:
+  resultado:
+    variacao_casa: 0.0
+    variacao_empate: 0.0
+    variacao_visitante: 0.0
+    lado_comprado: [casa, empate, visitante, nenhum]
+  gols:
+    variacao_over_25: 0.0
+  escanteios:
+    variacao_over_95: 0.0
+  sinal:
+    movimento_relevante: [sim, nao]
+    intensidade: [leve, moderado, forte]
+    alerta: [ok, ALERTA_MOVIMENTO_MERCADO]
+
+campo_leitura:
+  ativo: false
+
+output_proibido:
+  - leitura_subjetiva
+  - inferencia_de_causa     # não inventa por que moveu
+max_output_tokens: 0
+
+exige_evidencia: true
+sem_evidencia: nao_aplicavel
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: medio
+podavel: true
+qualidade_min: 3
+modelo_llm: null

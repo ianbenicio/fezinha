@@ -1,0 +1,68 @@
+# Camada: Fatos Relevantes (seção 32)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+
+id: fatos_relevantes
+nucleo: contextual
+motor: llm
+versao: "1.0"
+
+pergunta_unica: "Há fato objetivo e verificável que muda esta partida específica?"
+
+escopo:
+  - troca_de_tecnico            # data + nº de jogos sob novo comando
+  - crise_institucional         # salários atrasados, protesto documentado
+  - perda_de_mando              # punição, portões fechados
+  - maratona_de_jogos           # 3º jogo em 7 dias, viagem internacional
+  - decisao_judicial            # punição, perda de pontos
+  - estreia_de_reforco          # jogador relevante estreia
+
+fora_de_escopo:
+  - lesao_suspensao             # → camada elenco_impacto
+  - calendario_descanso         # → camada metadados
+  - forma_recente               # → núcleo estatístico (decaimento temporal)
+  - odds_movimento              # → camada odds / movimento_mercado
+  - declaracao_prioridade       # → camada visao_time
+
+inputs_permitidos:
+  - noticias_verificaveis_72h
+  - comunicados_oficiais_clube
+  - decisoes_publicas_federacao
+inputs_proibidos:
+  - odds
+  - palpites_externos
+  - output_outras_camadas
+  - rumor_sem_fonte
+fonte_minima: 1
+janela_temporal: "72h"
+
+output_schema:
+  fatos:                        # lista; cada fato é objeto fechado
+    - descricao: string
+      fonte: string
+      data: "YYYY-MM-DD"
+      direcao: [pro_mandante, pro_visitante, neutro, aumenta_incerteza]
+      magnitude: [baixa, media, alta]
+      flag: [verificado, nao_verificado]
+  impacto_confianca: [reduz, neutro, aumenta]
+  qualidade_dados: 0            # 0-5
+
+campo_leitura:
+  ativo: true
+  max_palavras: 50
+  regra: "cita a fonte de cada afirmação; sem especulação"
+
+output_proibido:
+  - probabilidade               # esta camada NÃO gera prob 1X2
+  - prosa_narrativa
+  - opiniao_sem_fonte
+max_output_tokens: 700
+
+exige_evidencia: true
+sem_evidencia: marcar_baixa_confianca
+proibe_especulacao: true
+granularidade: especifica       # "técnico X assumiu há 2 jogos", não "fase de transição"
+
+peso_inicial: baixo
+podavel: true
+qualidade_min: 3
+modelo_llm: haiku               # extração mecânica; backtest pode promover

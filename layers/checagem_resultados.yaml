@@ -1,0 +1,134 @@
+# Módulo: Checagem de Resultados / Feedback Loop (governança, pós-jogo)
+# Referência: docs/spec/secao-36-propriedades-camadas.md
+# Fecha o ciclo: compara o previsto (por CADA camada) com o real, classifica a
+# causa do erro e gera calibração. HÍBRIDO: fórmula calcula erro; LLM lê o
+# pós-jogo e separa erro-de-modelo de variância (azar).
+#
+# REGRA DE OURO DO APRENDIZADO: só calibra com erro SISTEMÁTICO.
+# Calibrar em cima de variância (azar) piora o modelo.
+
+id: checagem_resultados
+nucleo: governanca
+motor: hibrido
+versao: "1.0"
+
+pergunta_unica: "Onde a previsão divergiu do real — e isso é erro calibrável ou azar?"
+
+# ── 1. COLETA DO RESULTADO REAL ─────────────────────────
+coleta:
+  placar_final: ""
+  gols: { casa: 0, fora: 0, por_tempo: [0, 0] }
+  escanteios: { casa: 0, fora: 0, total: 0 }
+  eventos: [expulsoes, penaltis, gols_contra, lesao_em_jogo]
+  estatisticas_pos_jogo: [xg_real, posse, finalizacoes, ppda_real]
+  comentarios_pos_jogo: ""      # narrativa/análise (entrada para o LLM)
+
+# ── 2. SCORING POR CAMADA (fórmula) ─────────────────────
+# Cada camada previu algo; mede-se o erro dela isoladamente.
+scoring_por_camada:
+  metrica_principal: brier_score
+  metricas_apoio: [log_loss, erro_absoluto]
+  por_mercado: [1x2, over_under_gols, escanteios]
+  registra:
+    - camada
+    - previsto
+    - real
+    - erro
+    - acertou: [sim, nao, parcial]
+
+# ── 3. ATRIBUIÇÃO (fórmula) ─────────────────────────────
+# Qual lente puxou o agregador para o lado errado?
+atribuicao:
+  identifica_camada_responsavel: true
+  compara_peso_vs_erro: true     # camada com peso alto e erro alto = prioridade
+  baselines:                     # o sistema bateu o quê?
+    - favorito_odds
+    - consenso_externo
+    - modelo_estatistico_puro
+
+# ── 4. CLASSIFICAÇÃO DA CAUSA (LLM) ─────────────────────
+# Lê comentários + estatísticas pós-jogo. Separa o que é calibrável.
+classificacao_erro:
+  categorias:
+    erro_modelo: "viés sistemático — CALIBRAR"
+    variancia_irredutivel: "azar (trave, gol no fim) — NÃO calibrar"
+    evento_atipico: "expulsão/pênalti virou o jogo — contextualizar, não punir"
+  saida_por_jogo:
+    causa: [erro_modelo, variancia_irredutivel, evento_atipico]
+    camada_afetada: ""
+    evidencia: ""                # cita o evento/estatística
+
+# ── 5. CALIBRAÇÃO EM LOTE (periódica) ───────────────────
+# Duas velocidades: checagem é por jogo; calibração é por LOTE.
+# Calibrar por jogo = overfit. Por lote = amostra para distinguir viés de ruído.
+calibracao:
+  modo: lote_periodico
+  janela:
+    periodo: mensal              # default
+    piso_amostra: 40             # mín de jogos antes de recalibrar
+    regra: "dispara no fim do período SE atingiu o piso; senão acumula p/ próximo"
+    # ex: mês de parada FIFA com 15 jogos → não calibra, junta com o mês seguinte
+  processo:                      # validar → sintetizar → processar (pedido do dono)
+    1_validar: "compara cada previsão registrada com o real do período"
+    2_sintetizar: "agrega erros por camada e por mercado no lote"
+    3_processar: "recalibra só onde houver viés sistemático no lote"
+  destino:
+    - stacking_pesos            # §29 — re-treino com o lote
+    - qualidade_min_camada      # §20
+    - parametros_camada         # ex: cap do λ, k do shrinkage
+  validacao: walk_forward        # §29.4 — calibra no passado, aplica no futuro
+  gatilho: "erro_modelo recorrente NO LOTE (não em jogo isolado)"
+  protege_contra:
+    - overfitting_em_variancia   # azar não calibra
+    - calibracao_amostra_pequena # abaixo do piso não calibra
+
+# ── 6. APRENDIZADO ACUMULADO ────────────────────────────
+# Padrões persistentes viram regra, não ajuste pontual.
+aprendizado:
+  detecta_padroes:
+    - "camada X superestima em clássicos"
+    - "over 2.5 falha quando chove"
+    - "elenco_impacto exagera desfalque de atacante vs reserva forte"
+  registra_em: docs/runlogs/calibracao-log.md
+
+inputs_permitidos:
+  - previsoes_registradas        # output de cada camada + agregador (pré-jogo)
+  - resultado_real
+  - estatisticas_pos_jogo
+  - comentarios_pos_jogo         # para o LLM
+  - registro_banca               # ROI/CLV (banca.yaml)
+inputs_proibidos:
+  - alterar_previsao_pos_fato    # nunca reescreve a previsão original (auditoria)
+fonte_minima: 1
+
+output_schema:
+  jogo: ""
+  data: "YYYY-MM-DD"
+  acerto_agregador: [sim, nao, parcial]
+  erro_por_camada: [{camada: "", erro: 0.0, acertou: ""}]
+  camada_responsavel: ""
+  causa: [erro_modelo, variancia_irredutivel, evento_atipico]
+  bateu_baseline: [sim, nao]
+  acao_calibracao: [ajustar_peso, ajustar_qualidade, ajustar_parametro, nenhuma]
+  padrao_detectado: ""
+
+campo_leitura:
+  ativo: true                    # LLM: por que errou (lê pós-jogo)
+  max_palavras: 50
+  regra: "cita evento/estatística real; classifica causa; sem desculpa genérica"
+
+output_proibido:
+  - reescrever_previsao_original
+  - calibrar_em_variancia        # a regra de ouro do aprendizado
+  - ajuste_sem_recorrencia
+max_output_tokens: 600
+
+exige_evidencia: true
+sem_evidencia: marcar_baixa_confianca
+proibe_especulacao: true
+granularidade: especifica
+
+peso_inicial: feedback           # não prevê; corrige o sistema
+podavel: false
+qualidade_min: 3
+modelo_llm: sonnet               # classificar causa exige raciocínio
