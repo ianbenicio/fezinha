@@ -1,0 +1,41 @@
+# Segredos / ambiente
+.env
+.env.local
+.env.*.local
+*.key
+service-account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+.turbo/
+npm-debug.log*
+yarn-error.log*
+
+# Supabase local
+.branches/
+.temp/
+supabase/.temp/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs / dados locais
+*.log
+data/raw/
+data/cache/
