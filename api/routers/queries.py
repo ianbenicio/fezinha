@@ -9,8 +9,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from ..core import CurrentUser, UserDep, get_service_client
-from ..engine_stub import analisar_partida
 from ..pricing import COMPLEXIDADES, custo_de, plano_de
+from engine import analisar_partida
 
 router = APIRouter(prefix="/queries", tags=["consultas"])
 
@@ -33,6 +33,14 @@ async def criar_consulta(payload: NovaConsulta, user: CurrentUser = UserDep):
     match = sb.table("matches").select("*").eq("id", payload.match_id).single().execute()
     if not match.data:
         raise HTTPException(404, "Partida não encontrada")
+
+    # carrega força dos times (alimenta o λ do motor)
+    dados_match = dict(match.data)
+    ids = [dados_match["home_team_id"], dados_match["away_team_id"]]
+    times = sb.table("teams").select("id, nome, caracteristicas").in_("id", ids).execute()
+    by_id = {t["id"]: t for t in (times.data or [])}
+    dados_match["mandante"] = by_id.get(dados_match["home_team_id"])
+    dados_match["visitante"] = by_id.get(dados_match["away_team_id"])
 
     # perfil de risco do usuário (alimenta a banca)
     perfil = (
@@ -69,7 +77,7 @@ async def criar_consulta(payload: NovaConsulta, user: CurrentUser = UserDep):
     # roda o motor (stub por ora)
     try:
         resultado = analisar_partida(
-            match=match.data,
+            match=dados_match,
             complexidade=payload.complexidade,
             mercados=plano["mercados"],
             perfil_risco=perfil_risco,

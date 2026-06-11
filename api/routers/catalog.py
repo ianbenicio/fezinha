@@ -38,4 +38,13 @@ async def listar_partidas(
     if status:
         q = q.eq("status", status)
     res = q.order("data_hora").execute()
-    return {"partidas": res.data or []}
+    partidas = res.data or []
+
+    # enriquece com nomes dos times (lookup único)
+    times = sb.table("teams").select("id, nome, slug, escudo_url").eq("liga", liga).execute()
+    by_id = {t["id"]: t for t in (times.data or [])}
+    for p in partidas:
+        p["mandante"] = by_id.get(p["home_team_id"])
+        p["visitante"] = by_id.get(p["away_team_id"])
+
+    return {"partidas": partidas}

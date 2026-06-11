@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { apiGet } from "@/lib/api";
 
+type TeamRef = { id: number; nome: string; slug: string; escudo_url: string | null };
+
 type Match = {
   id: number;
   home_team_id: number;
@@ -12,6 +14,8 @@ type Match = {
   data_hora: string;
   rodada: number | null;
   status: string;
+  mandante: TeamRef | null;
+  visitante: TeamRef | null;
 };
 
 export default function Dashboard() {
@@ -49,7 +53,9 @@ export default function Dashboard() {
               className="flex items-center justify-between rounded bg-fz-card px-4 py-3"
             >
               <div>
-                <span className="font-medium">Time #{m.home_team_id} x Time #{m.away_team_id}</span>
+                <span className="font-medium">
+                  {m.mandante?.nome ?? `Time #${m.home_team_id}`} x {m.visitante?.nome ?? `Time #${m.away_team_id}`}
+                </span>
                 <span className="ml-2 text-sm text-white/50">
                   {new Date(m.data_hora).toLocaleString("pt-BR")}
                 </span>
