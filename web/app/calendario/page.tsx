@@ -9,9 +9,11 @@ type TeamRef = { nome: string };
 type Match = {
   id: number;
   liga: string;
-  data_hora: string;
+  data_hora: string | null;
   rodada: number | null;
   status: string;
+  placar_casa: number | null;
+  placar_fora: number | null;
   mandante: TeamRef | null;
   visitante: TeamRef | null;
 };
@@ -22,10 +24,9 @@ const LIGA_NOME: Record<string, string> = {
 };
 const nomeLiga = (s: string) => LIGA_NOME[s] ?? s;
 
-// ── helpers de data ─────────────────────────────────────
 function startOfWeek(d: Date): Date {
   const x = new Date(d);
-  const dow = (x.getDay() + 6) % 7; // segunda = 0
+  const dow = (x.getDay() + 6) % 7;
   x.setDate(x.getDate() - dow);
   x.setHours(0, 0, 0, 0);
   return x;
@@ -35,12 +36,8 @@ function addDays(d: Date, n: number): Date {
   x.setDate(x.getDate() + n);
   return x;
 }
-function startOfMonth(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
-}
-function endOfMonth(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-}
+const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
 const fmtDia = (d: Date) =>
   d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
 const fmtHora = (s: string) =>
@@ -60,23 +57,27 @@ export default function CalendarioPage() {
         router.replace("/login");
         return;
       }
-      apiGet<{ partidas: Match[] }>("/catalog/matches?status=agendado")
+      apiGet<{ partidas: Match[] }>("/catalog/matches")
         .then((r) => {
           setMatches(r.partidas);
-          // posiciona o calendário no primeiro jogo futuro (evita abrir vazio)
-          const futuros = r.partidas
-            .map((m) => new Date(m.data_hora))
-            .filter((d) => d >= new Date())
-            .sort((a, b) => a.getTime() - b.getTime());
-          if (futuros.length) setRef(futuros[0]);
+          // posiciona na data com jogo mais próxima de hoje
+          const hoje = new Date();
+          const datas = r.partidas
+            .filter((m) => m.data_hora)
+            .map((m) => new Date(m.data_hora as string));
+          if (datas.length) {
+            const maisProx = datas.reduce((a, b) =>
+              Math.abs(b.getTime() - hoje.getTime()) < Math.abs(a.getTime() - hoje.getTime()) ? b : a
+            );
+            setRef(maisProx);
+          }
         })
         .catch(() => setMatches([]))
         .finally(() => setLoading(false));
     });
   }, [router]);
 
-  // período visível
-  const [ini, fim] = useMemo(() => {
+  const [ini, fim] = useMemo<[Date, Date]>(() => {
     if (view === "semana") {
       const s = startOfWeek(ref);
       return [s, addDays(s, 7)];
@@ -92,9 +93,9 @@ export default function CalendarioPage() {
     return ref.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   }, [view, ref]);
 
-  // filtra + agrupa por rodada
   const porRodada = useMemo(() => {
     const visiveis = matches.filter((m) => {
+      if (!m.data_hora) return false;
       const d = new Date(m.data_hora);
       const okLiga = liga === "todas" || m.liga === liga;
       return d >= ini && d < fim && okLiga;
@@ -104,23 +105,23 @@ export default function CalendarioPage() {
       const k = `${nomeLiga(m.liga)} · Rodada ${m.rodada ?? "?"}`;
       (g[k] ??= []).push(m);
     }
-    for (const k in g) g[k].sort((a, b) => a.data_hora.localeCompare(b.data_hora));
+    for (const k in g) g[k].sort((a, b) => (a.data_hora ?? "").localeCompare(b.data_hora ?? ""));
     return g;
   }, [matches, ini, fim, liga]);
 
   function navega(dir: number) {
-    setRef((r) => (view === "semana" ? addDays(r, 7 * dir) : new Date(r.getFullYear(), r.getMonth() + dir, 1)));
+    setRef((r) =>
+      view === "semana" ? addDays(r, 7 * dir) : new Date(r.getFullYear(), r.getMonth() + dir, 1)
+    );
   }
 
   if (loading) return <p className="text-white/60">Carregando calendário...</p>;
-
   const rodadas = Object.entries(porRodada);
 
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold">Calendário</h1>
-        {/* switch semana/mês */}
         <div className="flex rounded-lg border border-white/10 p-0.5 text-sm">
           {(["semana", "mes"] as const).map((v) => (
             <button key={v} onClick={() => setView(v)}
@@ -131,7 +132,6 @@ export default function CalendarioPage() {
         </div>
       </div>
 
-      {/* navegação + filtro liga */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <button onClick={() => navega(-1)} className="rounded bg-fz-card px-3 py-1 hover:text-fz-green">‹</button>
@@ -157,24 +157,34 @@ export default function CalendarioPage() {
                 {titulo}
               </h2>
               <ul className="space-y-2">
-                {jogos.map((m) => (
-                  <li key={m.id}
-                    className="flex items-center justify-between rounded bg-fz-card px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-28 text-sm text-white/50">
-                        <div>{fmtDia(new Date(m.data_hora))}</div>
-                        <div className="text-fz-green">{fmtHora(m.data_hora)}</div>
+                {jogos.map((m) => {
+                  const fim = m.status === "encerrado";
+                  return (
+                    <li key={m.id} className="flex items-center justify-between rounded bg-fz-card px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-24 text-sm text-white/50">
+                          <div>{m.data_hora ? fmtDia(new Date(m.data_hora)) : "—"}</div>
+                          <div className="text-fz-green">{m.data_hora ? fmtHora(m.data_hora) : ""}</div>
+                        </div>
+                        <span className="font-medium">
+                          {m.mandante?.nome ?? "?"}
+                          {fim ? (
+                            <span className="mx-2 rounded bg-black/40 px-2 py-0.5 text-fz-green">
+                              {m.placar_casa} - {m.placar_fora}
+                            </span>
+                          ) : (
+                            <span className="mx-2 text-white/40">x</span>
+                          )}
+                          {m.visitante?.nome ?? "?"}
+                        </span>
                       </div>
-                      <span className="font-medium">
-                        {m.mandante?.nome ?? "?"} <span className="text-white/40">x</span> {m.visitante?.nome ?? "?"}
-                      </span>
-                    </div>
-                    <button onClick={() => router.push(`/consulta/${m.id}`)}
-                      className="rounded bg-fz-green px-3 py-1 text-sm font-semibold text-black">
-                      Analisar
-                    </button>
-                  </li>
-                ))}
+                      <button onClick={() => router.push(`/consulta/${m.id}`)}
+                        className="rounded bg-fz-green px-3 py-1 text-sm font-semibold text-black">
+                        {fim ? "Rever" : "Analisar"}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ))}
