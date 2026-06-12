@@ -49,18 +49,20 @@ async def detalhe_partida(match_id: int, _: CurrentUser = UserDep):
 @router.get("/matches")
 async def listar_partidas(
     _: CurrentUser = UserDep,
-    liga: str = "brasileirao_serie_a",
+    liga: str | None = None,        # None = todas as ligas (para agrupar por campeonato)
     status: str | None = None,
 ):
     sb = get_service_client()
-    q = sb.table("matches").select("*").eq("liga", liga)
+    q = sb.table("matches").select("*")
+    if liga:
+        q = q.eq("liga", liga)
     if status:
         q = q.eq("status", status)
     res = q.order("data_hora").execute()
     partidas = res.data or []
 
-    # enriquece com nomes dos times (lookup único)
-    times = sb.table("teams").select("id, nome, slug, escudo_url").eq("liga", liga).execute()
+    # enriquece com nomes dos times (lookup único, todas as ligas)
+    times = sb.table("teams").select("id, nome, slug, escudo_url").execute()
     by_id = {t["id"]: t for t in (times.data or [])}
     for p in partidas:
         p["mandante"] = by_id.get(p["home_team_id"])
