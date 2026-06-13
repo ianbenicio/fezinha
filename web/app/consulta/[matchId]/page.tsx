@@ -25,9 +25,20 @@ type TraceItem = {
   entrada: unknown; saida: unknown;
 };
 
+type ForcaComparativa = {
+  mandante: { ifc: number; leitura: string };
+  visitante: { ifc: number; leitura: string };
+  diferenca_ifc: number;
+  expectativa_mandante: number;
+  leitura: string;
+  adversarios_comuns: { adversario: string; resultado_mandante: string; resultado_visitante: string }[];
+  jogos_no_grafo: number;
+};
+
 type Resultado = {
   partida?: { mandante: string; visitante: string };
   baseline?: boolean;
+  forca_comparativa?: ForcaComparativa | null;
   agregador?: {
     resultado: {
       prob_casa: number; prob_empate: number; prob_visitante: number;
@@ -37,6 +48,14 @@ type Resultado = {
     escanteios: { over_85: number; over_95: number; over_105: number };
   };
   trace?: TraceItem[];
+};
+
+const LEITURA_COMP: Record<string, string> = {
+  vantagem_forte_casa: "Vantagem forte do mandante",
+  vantagem_casa: "Vantagem do mandante",
+  equilibrio: "Equilíbrio",
+  vantagem_fora: "Vantagem do visitante",
+  vantagem_forte_fora: "Vantagem forte do visitante",
 };
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
@@ -137,6 +156,53 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
 
       {ag && (
         <div className="mt-6 space-y-5">
+          {/* Força Comparativa (IFC) */}
+          {resultado?.forca_comparativa && (() => {
+            const fc = resultado.forca_comparativa!;
+            const cm = partida?.mandante?.nome ?? "Mandante";
+            const cv = partida?.visitante?.nome ?? "Visitante";
+            return (
+              <section className="rounded-lg bg-fz-card p-5">
+                <div className="mb-3 flex items-baseline justify-between">
+                  <h2 className="font-semibold">Força comparativa</h2>
+                  <span className="text-sm text-fz-green">{LEITURA_COMP[fc.leitura] ?? fc.leitura}</span>
+                </div>
+                <div className="mb-1 flex justify-between text-sm">
+                  <span>{cm}</span><span className="font-bold">{fc.mandante.ifc}<span className="text-white/40">/100</span></span>
+                </div>
+                <div className="mb-3 h-3 w-full overflow-hidden rounded bg-black/30">
+                  <div className="h-full rounded bg-fz-green" style={{ width: `${fc.mandante.ifc}%` }} />
+                </div>
+                <div className="mb-1 flex justify-between text-sm">
+                  <span>{cv}</span><span className="font-bold">{fc.visitante.ifc}<span className="text-white/40">/100</span></span>
+                </div>
+                <div className="mb-3 h-3 w-full overflow-hidden rounded bg-black/30">
+                  <div className="h-full rounded" style={{ width: `${fc.visitante.ifc}%`, background: "#3b82f6" }} />
+                </div>
+                <p className="text-xs text-white/50">
+                  50 = média da liga · diferença {fc.diferenca_ifc > 0 ? "+" : ""}{fc.diferenca_ifc} →
+                  expectativa do mandante <b className="text-white/80">{pct(fc.expectativa_mandante)}</b>
+                  {" "}(de {fc.jogos_no_grafo} jogos)
+                </p>
+                {fc.adversarios_comuns.length > 0 && (
+                  <div className="mt-3 border-t border-white/10 pt-3">
+                    <div className="mb-2 text-xs text-white/40">Adversários em comum</div>
+                    <ul className="space-y-1 text-sm">
+                      {fc.adversarios_comuns.map((a, i) => (
+                        <li key={i} className="flex flex-wrap gap-x-2">
+                          <span className="text-white/60">vs {a.adversario}:</span>
+                          <span>{cm} {a.resultado_mandante}</span>
+                          <span className="text-white/40">·</span>
+                          <span>{cv} {a.resultado_visitante}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </section>
+            );
+          })()}
+
           <section className="rounded-lg bg-fz-card p-5">
             <div className="mb-3 flex items-baseline justify-between">
               <h2 className="font-semibold">Resultado provável</h2>

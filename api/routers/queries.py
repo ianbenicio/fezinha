@@ -42,6 +42,19 @@ async def criar_consulta(payload: NovaConsulta, user: CurrentUser = UserDep):
     dados_match["mandante"] = by_id.get(dados_match["home_team_id"])
     dados_match["visitante"] = by_id.get(dados_match["away_team_id"])
 
+    # histórico encerrado da liga (grafo da força comparativa) + nomes
+    liga = dados_match.get("liga", "brasileirao_serie_a")
+    hist = (
+        sb.table("matches")
+        .select("home_team_id, away_team_id, placar_casa, placar_fora")
+        .eq("liga", liga).eq("status", "encerrado")
+        .not_.is_("placar_casa", "null")
+        .execute()
+    )
+    historico = hist.data or []
+    todos_times = sb.table("teams").select("id, nome").eq("liga", liga).execute()
+    nomes = {t["id"]: t["nome"] for t in (todos_times.data or [])}
+
     # perfil de risco do usuário (alimenta a banca)
     perfil = (
         sb.table("profiles").select("perfil_risco").eq("id", user.id).single().execute()
@@ -81,6 +94,8 @@ async def criar_consulta(payload: NovaConsulta, user: CurrentUser = UserDep):
             complexidade=payload.complexidade,
             mercados=plano["mercados"],
             perfil_risco=perfil_risco,
+            historico=historico,
+            nomes=nomes,
         )
     except Exception:
         # estorna: custo negativo credita de volta e registra a transação (uma só).

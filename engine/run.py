@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Any
 
 from .dixon_coles import mercados_de_escanteios, mercados_de_gols
+from .forca_comparativa import comparar
 from .strength import PRIOR_LIGA, estimar_lambdas
 
 
@@ -27,6 +28,8 @@ def analisar_partida(
     complexidade: str,
     mercados: list[str],
     perfil_risco: str,
+    historico: list[dict[str, Any]] | None = None,
+    nomes: dict[int, str] | None = None,
 ) -> dict[str, Any]:
     casa = match.get("mandante") or {}
     fora = match.get("visitante") or {}
@@ -113,6 +116,44 @@ def analisar_partida(
         "saida": escanteios,
     })
 
+    # ── forca_comparativa (rating transitivo Colley+Massey) ──
+    comp = None
+    if historico:
+        hid = match.get("home_team_id") or casa.get("id")
+        aid = match.get("away_team_id") or fora.get("id")
+        if hid and aid:
+            comp = comparar(historico, hid, aid, nomes or {})
+    if comp:
+        trace.append({
+            "camada": "forca_comparativa",
+            "topico": "Força comparativa (cadeia de resultados)",
+            "status": "ok",
+            "resumo": f"{nome_casa} IFC {comp.mandante.ifc} ({comp.mandante.leitura}) x "
+                      f"{nome_fora} IFC {comp.visitante.ifc} ({comp.visitante.leitura}). "
+                      f"Expectativa do mandante: {_pct(comp.expectativa_mandante)}.",
+            "justificativa": "Resolve a cadeia transitiva de TODOS os resultados da liga "
+                             "(se A venceu B e B venceu C, A ganha crédito sobre C). "
+                             "Nota 0-100; 50 = média da liga. Inclui bônus de mando.",
+            "fonte": f"Colley + Massey sobre {comp.jogos_no_grafo} jogos oficiais (CBF).",
+            "entrada": {"jogos_no_grafo": comp.jogos_no_grafo,
+                        "ajustes": comp.ajustes_aplicados},
+            "saida": {"ifc_mandante": comp.mandante.ifc, "ifc_visitante": comp.visitante.ifc,
+                      "diferenca": comp.diferenca_ifc,
+                      "expectativa_mandante": comp.expectativa_mandante,
+                      "leitura": comp.leitura},
+        })
+    else:
+        trace.append({
+            "camada": "forca_comparativa",
+            "topico": "Força comparativa (cadeia de resultados)",
+            "status": "pendente",
+            "resumo": "Sem histórico suficiente da liga para montar o grafo.",
+            "justificativa": "Precisa de jogos encerrados dos dois times na temporada.",
+            "fonte": "Resultados oficiais da liga.",
+            "entrada": None,
+            "saida": None,
+        })
+
     # ── camadas pendentes (com fonte planejada) ─────────
     pendentes = [
         ("elenco_impacto", "Escalação / impacto de jogadores",
@@ -171,6 +212,16 @@ def analisar_partida(
                 "camadas_ativas": ["perfil_liga", "pi_ratings", "strength", "dixon_coles", "escanteios"],
                 "camadas_pendentes": [p[0] for p in pendentes],
             },
+        },
+        "forca_comparativa": None if not comp else {
+            "mandante": {"ifc": comp.mandante.ifc, "leitura": comp.mandante.leitura},
+            "visitante": {"ifc": comp.visitante.ifc, "leitura": comp.visitante.leitura},
+            "diferenca_ifc": comp.diferenca_ifc,
+            "expectativa_mandante": comp.expectativa_mandante,
+            "leitura": comp.leitura,
+            "adversarios_comuns": comp.adversarios_comuns,
+            "ajustes_aplicados": comp.ajustes_aplicados,
+            "jogos_no_grafo": comp.jogos_no_grafo,
         },
         "indice_confianca": {"valor": None, "leitura": "indisponivel_ate_agregador_completo"},
         "alertas": [{"tipo": "MOTOR_PARCIAL",

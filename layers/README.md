@@ -16,6 +16,7 @@ Pipeline completo: análise (18 camadas) → fusão (qualidade → agregador →
 | `dixon_coles.yaml` | Dixon-Coles + Poisson escanteios | formula | fábrica de mercados (1X2, O/U, BTTS, tempo, escanteios) |
 | `shrinkage.yaml` | Shrinkage bayesiano | formula | regulariza amostra pequena |
 | `ordered_logit.yaml` | Ordered logit | formula | sanity check (fora do agregador) |
+| `forca_comparativa.yaml` | Força Comparativa | formula | rating transitivo Colley+Massey; IFC 0-100 |
 
 ### Bloco Contextual (lente: situacional/qualitativa)
 | Arquivo | Camada | Motor | Papel |
