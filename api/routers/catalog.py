@@ -27,6 +27,16 @@ async def detalhe_time(team_id: int, _: CurrentUser = UserDep):
     return {"time": time.data, "jogadores": jogadores.data or []}
 
 
+@router.get("/news")
+async def listar_noticias(_: CurrentUser = UserDep, liga: str | None = None, limit: int = 20):
+    sb = get_service_client()
+    q = sb.table("news").select("titulo, url, fonte, liga, imagem_url, publicado_em")
+    if liga:
+        q = q.eq("liga", liga)
+    res = q.order("publicado_em", desc=True).limit(limit).execute()
+    return {"noticias": res.data or []}
+
+
 @router.get("/matches/{match_id}")
 async def detalhe_partida(match_id: int, _: CurrentUser = UserDep):
     sb = get_service_client()

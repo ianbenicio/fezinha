@@ -6,110 +6,88 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { apiGet } from "@/lib/api";
 
-type TeamRef = { id: number; nome: string; slug: string; escudo_url: string | null };
-
+type TeamRef = { nome: string; escudo_url: string | null };
 type Match = {
-  id: number;
-  liga: string;
-  home_team_id: number;
-  away_team_id: number;
-  data_hora: string | null;
-  rodada: number | null;
-  status: string;
-  placar_casa: number | null;
-  placar_fora: number | null;
-  mandante: TeamRef | null;
-  visitante: TeamRef | null;
+  id: number; liga: string; data_hora: string | null; rodada: number | null;
+  status: string; mandante: TeamRef | null; visitante: TeamRef | null;
 };
+type Noticia = { titulo: string; url: string; liga: string | null; publicado_em: string | null };
 
-const LIGA_NOME: Record<string, string> = {
-  brasileirao_serie_a: "Brasileirão Série A",
-  brasileirao_serie_b: "Brasileirão Série B",
-};
-const nomeLiga = (s: string) =>
-  LIGA_NOME[s] ?? s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+const fmtData = (s: string | null) =>
+  s ? new Date(s).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "data a definir";
+
+function Card({ titulo, href, children }: { titulo: string; href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href}
+      className="flex flex-col rounded-lg border border-white/10 bg-fz-card p-4 transition hover:border-fz-green">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-bold">{titulo}</h2>
+        <span className="text-sm text-fz-green">ver tudo →</span>
+      </div>
+      <div className="flex-1 space-y-2 text-sm">{children}</div>
+    </Link>
+  );
+}
 
 export default function Dashboard() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
+  const [news, setNews] = useState<Noticia[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace("/login");
-        return;
-      }
-      apiGet<{ partidas: Match[] }>("/catalog/matches")
-        .then((r) => setMatches(r.partidas))
-        .catch(() => setMatches([]))
+      if (!data.session) { router.replace("/login"); return; }
+      Promise.all([
+        apiGet<{ partidas: Match[] }>("/catalog/matches?status=agendado").catch(() => ({ partidas: [] })),
+        apiGet<{ noticias: Noticia[] }>("/catalog/news?limit=5").catch(() => ({ noticias: [] })),
+      ]).then(([m, n]) => { setMatches(m.partidas); setNews(n.noticias); })
         .finally(() => setLoading(false));
     });
   }, [router]);
 
-  if (loading) return <p className="text-white/60">Carregando partidas...</p>;
-  if (matches.length === 0)
-    return <p className="text-white/60">Nenhuma partida no catálogo ainda.</p>;
+  if (loading) return <p className="text-white/60">Carregando...</p>;
 
-  // agrupa por liga; dentro, mais recentes primeiro; limita
-  const grupos: Record<string, Match[]> = {};
-  for (const m of matches) (grupos[m.liga] ??= []).push(m);
-  for (const k in grupos)
-    grupos[k].sort((a, b) => (b.data_hora ?? "").localeCompare(a.data_hora ?? ""));
+  const proximos = (liga: string) =>
+    matches
+      .filter((m) => m.liga === liga && m.data_hora)
+      .sort((a, b) => (a.data_hora ?? "").localeCompare(b.data_hora ?? ""))
+      .slice(0, 4);
+
+  const cardJogos = (liga: string, label: string) => (
+    <Card titulo={label} href="/calendario">
+      {proximos(liga).length === 0 ? (
+        <p className="text-white/40">Sem jogos agendados.</p>
+      ) : (
+        proximos(liga).map((m) => (
+          <div key={m.id} className="border-b border-white/5 pb-1">
+            <div className="font-medium">{m.mandante?.nome ?? "?"} x {m.visitante?.nome ?? "?"}</div>
+            <div className="text-xs text-white/40">{fmtData(m.data_hora)}{m.rodada ? ` · R${m.rodada}` : ""}</div>
+          </div>
+        ))
+      )}
+    </Card>
+  );
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Partidas</h1>
-        <Link href="/calendario" className="text-sm text-fz-green hover:underline">
-          Ver calendário completo →
-        </Link>
+    <div>
+      <h1 className="mb-4 text-xl font-bold">Painel</h1>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card titulo="📰 Últimas notícias" href="/noticias">
+          {news.length === 0 ? (
+            <p className="text-white/40">Sem notícias.</p>
+          ) : (
+            news.slice(0, 5).map((n) => (
+              <div key={n.url} className="border-b border-white/5 pb-1">
+                <div className="line-clamp-2">{n.titulo}</div>
+                <div className="text-xs text-white/40">{n.publicado_em ?? ""}</div>
+              </div>
+            ))
+          )}
+        </Card>
+        {cardJogos("brasileirao_serie_a", "⚽ Próximos — Série A")}
+        {cardJogos("brasileirao_serie_b", "⚽ Próximos — Série B")}
       </div>
-
-      {Object.entries(grupos).map(([liga, jogos]) => (
-        <section key={liga}>
-          <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
-            <span className="rounded bg-fz-green/20 px-2 py-0.5 text-sm text-fz-green">
-              {jogos.length}
-            </span>
-            {nomeLiga(liga)}
-          </h2>
-          <ul className="space-y-2">
-            {jogos.slice(0, 12).map((m) => {
-              const fim = m.status === "encerrado";
-              return (
-                <li key={m.id} className="flex items-center justify-between rounded bg-fz-card px-4 py-3">
-                  <div>
-                    <span className="font-medium">
-                      {m.mandante?.nome ?? `Time #${m.home_team_id}`}
-                      {fim ? (
-                        <span className="mx-2 rounded bg-black/40 px-2 py-0.5 text-fz-green">
-                          {m.placar_casa} - {m.placar_fora}
-                        </span>
-                      ) : (
-                        <span className="mx-2 text-white/40">x</span>
-                      )}
-                      {m.visitante?.nome ?? `Time #${m.away_team_id}`}
-                    </span>
-                    <span className="ml-2 text-sm text-white/50">
-                      {m.rodada ? `Rodada ${m.rodada}` : ""}
-                      {m.data_hora
-                        ? ` · ${new Date(m.data_hora).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}`
-                        : " · data a definir"}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => router.push(`/consulta/${m.id}`)}
-                    className="rounded bg-fz-green px-3 py-1 text-sm font-semibold text-black"
-                  >
-                    {fim ? "Rever" : "Analisar"}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
     </div>
   );
 }

@@ -136,6 +136,33 @@ def sync_jogos(sb, liga: str) -> None:
     print(f"  {liga}: {total} jogos da rodada {rodada} sincronizados")
 
 
+def sync_noticias(sb, liga: str, max_itens: int = 10) -> None:
+    r = httpx.get(URLS[liga], headers={"User-Agent": UA}, timeout=30, follow_redirects=True)
+    r.raise_for_status()
+    pares = re.findall(
+        r'<a[^>]+href="(https://ge\.globo\.com/[^"]*?/noticia/[^"]+\.ghtml)"[^>]*>(.*?)</a>',
+        r.text, re.DOTALL)
+    vistos = set(); total = 0
+    for url, txt in pares:
+        titulo = re.sub(r"<[^>]+>", " ", txt)
+        titulo = re.sub(r"\s+", " ", titulo).strip().replace("&quot;", '"')
+        if len(titulo) < 20 or url in vistos:
+            continue
+        vistos.add(url)
+        d = re.search(r"/noticia/(\d{4})/(\d{2})/(\d{2})/", url)
+        data = f"{d.group(1)}-{d.group(2)}-{d.group(3)}" if d else None
+        ex = sb.table("news").select("id").eq("url", url).execute().data
+        if not ex:
+            sb.table("news").insert({
+                "titulo": titulo[:200], "url": url, "fonte": "ge.globo",
+                "liga": liga, "publicado_em": data,
+            }).execute()
+            total += 1
+        if len(vistos) >= max_itens:
+            break
+    print(f"  {liga}: {total} notícias novas")
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "help"
     sb = _sb()
@@ -147,7 +174,11 @@ def main():
         for liga in URLS:
             try: sync_jogos(sb, liga)
             except Exception as e: print(f"  erro {liga}: {e}")
-    if cmd not in ("classificacao", "jogos", "all"):
+    if cmd in ("noticias", "all"):
+        for liga in URLS:
+            try: sync_noticias(sb, liga)
+            except Exception as e: print(f"  erro {liga}: {e}")
+    if cmd not in ("classificacao", "jogos", "noticias", "all"):
         print(__doc__)
 
 
