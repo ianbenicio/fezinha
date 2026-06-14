@@ -266,7 +266,7 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
                         {t.fonte && (
                           <p className="text-white/60"><b className="text-white/40">Fonte: </b>{t.fonte}</p>
                         )}
-                        {(t.entrada || t.saida) && (
+                        {(t.entrada != null || t.saida != null) && (
                           <div className="grid gap-2 sm:grid-cols-2">
                             <div>
                               <div className="text-xs text-white/40">entrada</div>
