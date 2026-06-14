@@ -41,3 +41,8 @@ Thumbs.db
 *.log
 data/raw/
 data/cache/
+
+# Temporários de geração/ingestão
+_*.sql
+_*.txt
+*.pdf
