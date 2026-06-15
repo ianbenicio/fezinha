@@ -228,7 +228,7 @@ Codex:
 
 - rascunhar contrato `engine -> api -> web v0`;
 - implementar agregador fallback executavel;
-- diferenciar modos `nucleo_only`, `modelo_only`, `fallback_pesos`;
+- diferenciar modos `nucleo_apenas`, `modelo_only`, `fallback_pesos`;
 - corrigir contratos que violem isolamento, especialmente `forca_comparativa.yaml`;
 - adicionar testes de shape do payload.
 

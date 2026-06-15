@@ -2,7 +2,9 @@
 
 ## Estrutura
 
+- `contract-engine-api-web-v0.md` — Contrato minimo e retrocompativel entre motor, API e web
 - `secoes-28-35-upgrades.md` — Mudanças de design recomendadas para a v3 da arquitetura
+- `secao-36-propriedades-camadas.md` — Propriedades obrigatorias para contratos de camada
 
 ## Fluxo de Integração
 
@@ -35,10 +37,12 @@ Nenhuma camada lê output de outra. Cada camada produz seus números/sinais inde
 
 ## Próximos Passos
 
-1. Integrar seções 28-35 ao documento mestre
-2. Implementar cada componente novo
-3. Coletar histórico de previsões (~2 temporadas) para treinar stacking
-4. Validação walk-forward e backtest
+1. Validar `contract-engine-api-web-v0.md` com o consumidor web
+2. Implementar agregador fallback sem quebrar o contrato v0
+3. Integrar seções 28-35 ao documento mestre
+4. Implementar cada componente novo
+5. Coletar histórico de previsões (~2 temporadas) para treinar stacking
+6. Validação walk-forward e backtest
 
 ---
 

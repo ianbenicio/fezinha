@@ -190,6 +190,7 @@ def analisar_partida(
         "partida": {"mandante": nome_casa, "visitante": nome_fora},
         "lambdas": {"casa": lam.lh, "fora": lam.la, "escanteios": lam.escanteios},
         "agregador": {
+            "modo": "nucleo_apenas",
             "resultado": {
                 "prob_casa": gols.prob_casa,
                 "prob_empate": gols.prob_empate,
