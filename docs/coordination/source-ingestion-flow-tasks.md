@@ -1,6 +1,6 @@
 ﻿# Tarefas - Fluxo de Ingestao de Fontes
 
-Status: planejado
+Status: em andamento
 Versao: v0
 Data: 2026-06-15
 Base: `docs/spec/source-catalog-v0.md`
@@ -49,10 +49,10 @@ Nao pode editar: `db/migrations/`
 
 Tarefas:
 
-- [ ] Definir formato padrao `manual_source_batch_v0`.
-- [ ] Incluir campos obrigatorios de proveniencia.
-- [ ] Permitir entrada em JSON e CSV.
-- [ ] Documentar exemplos para classificacao, calendario, resultado, CA/CV,
+- [x] Definir formato padrao `manual_source_batch_v0`.
+- [x] Incluir campos obrigatorios de proveniencia.
+- [x] Permitir entrada em JSON e CSV.
+- [x] Documentar exemplos para classificacao, calendario, resultado, CA/CV,
       noticias e odds.
 
 Criterio de pronto:
@@ -61,6 +61,12 @@ Criterio de pronto:
 - Campos obrigatorios batem com `source-catalog-v0.md`.
 - Lote sem fonte nao passa no schema.
 
+Artefatos:
+
+- `docs/templates/manual_source_batch_v0.md`
+- `docs/templates/manual_source_batch_v0.schema.json`
+- `docs/templates/manual_source_batch_v0.example.json`
+
 ### A2. Prompt padrao para NotebookLM/outra ferramenta
 
 Owner: Codex
@@ -68,17 +74,21 @@ Pode editar: `docs/templates/`
 
 Tarefas:
 
-- [ ] Criar prompt que exige extrair apenas dados presentes na fonte.
-- [ ] Exigir `null` quando o dado nao estiver explicitamente na fonte.
-- [ ] Exigir URL, data de coleta, titulo da fonte e trecho/linha quando
+- [x] Criar prompt que exige extrair apenas dados presentes na fonte.
+- [x] Exigir `null` quando o dado nao estiver explicitamente na fonte.
+- [x] Exigir URL, data de coleta, titulo da fonte e trecho/linha quando
       possivel.
-- [ ] Proibir completamento por memoria ou inferencia.
-- [ ] Pedir saida em JSON/CSV compativel com `manual_source_batch_v0`.
+- [x] Proibir completamento por memoria ou inferencia.
+- [x] Pedir saida em JSON/CSV compativel com `manual_source_batch_v0`.
 
 Criterio de pronto:
 
 - Prompt pronto para o usuario colar no NotebookLM ou ferramenta equivalente.
 - Prompt deixa claro: "nao invente, nao complete, nao estime".
+
+Artefato:
+
+- `docs/templates/notebooklm-extraction-prompt.md`
 
 ### A3. Validador local de lote
 

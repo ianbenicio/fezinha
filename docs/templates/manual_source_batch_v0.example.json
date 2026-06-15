@@ -1,0 +1,179 @@
+{
+  "schema_version": "manual_source_batch_v0",
+  "batch_id": "cbf-serie-a-2026-r19-20260615",
+  "created_at": "2026-06-15T12:00:00-03:00",
+  "created_by": "operador_manual",
+  "notes": "Exemplo de bootstrap manual. Valores ilustram o formato; validar contra a fonte antes de importar.",
+  "source": {
+    "source_id": "cbf_tabelas",
+    "source_name": "CBF - Tabelas",
+    "source_url": "https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-a/2026",
+    "source_type": "oficial_primaria",
+    "fetched_at": "2026-06-15T11:13:00-03:00",
+    "quality_score": 4,
+    "status_fonte": "ativo",
+    "ingestion_method": "notebooklm",
+    "source_snapshot_path": "F:/WebDownlaods/Fezinha/CBF - Confederacao Brasileira de Futebol.html",
+    "raw_payload_hash": null,
+    "extraction_tool": "NotebookLM"
+  },
+  "records": [
+    {
+      "record_id": "standings-palmeiras-2026-r19",
+      "record_type": "standings",
+      "natural_key": "brasileirao_serie_a:2026:19:palmeiras:standings",
+      "status": "ok",
+      "quality_score": 4,
+      "evidence": {
+        "page": null,
+        "line": null,
+        "selector": "classification table",
+        "quote": "Palmeiras 41 18 12 5 1 30 13 17",
+        "table": "classificacao"
+      },
+      "payload": {
+        "competition": "brasileirao_serie_a",
+        "season": 2026,
+        "round": 19,
+        "position": 1,
+        "team": "Palmeiras",
+        "points": 41,
+        "played": 18,
+        "wins": 12,
+        "draws": 5,
+        "losses": 1,
+        "goals_for": 30,
+        "goals_against": 13,
+        "goal_difference": 17,
+        "yellow_cards": 40,
+        "red_cards": 4,
+        "points_percentage": 75
+      }
+    },
+    {
+      "record_id": "discipline-palmeiras-2026-r19",
+      "record_type": "discipline_team",
+      "natural_key": "brasileirao_serie_a:2026:19:palmeiras:discipline_team",
+      "status": "ok",
+      "quality_score": 4,
+      "evidence": {
+        "page": null,
+        "line": null,
+        "selector": "classification table",
+        "quote": "CA 40 CV 4",
+        "table": "classificacao"
+      },
+      "payload": {
+        "competition": "brasileirao_serie_a",
+        "season": 2026,
+        "round": 19,
+        "team": "Palmeiras",
+        "yellow_cards": 40,
+        "red_cards": 4
+      }
+    },
+    {
+      "record_id": "fixture-flamengo-palmeiras-2026-r19",
+      "record_type": "fixture",
+      "natural_key": "brasileirao_serie_a:2026:19:flamengo:palmeiras:fixture",
+      "status": "ok",
+      "quality_score": 4,
+      "evidence": {
+        "page": null,
+        "line": null,
+        "selector": "round 19 table",
+        "quote": "Flamengo x Palmeiras",
+        "table": "jogos"
+      },
+      "payload": {
+        "competition": "brasileirao_serie_a",
+        "season": 2026,
+        "round": 19,
+        "match_date": "2026-07-18",
+        "kickoff_time": "18:30",
+        "timezone": "America/Sao_Paulo",
+        "home_team": "Flamengo",
+        "away_team": "Palmeiras",
+        "stadium": null,
+        "status": "scheduled"
+      }
+    },
+    {
+      "record_id": "result-palmeiras-santos-2026-r18",
+      "record_type": "result",
+      "natural_key": "brasileirao_serie_a:2026:18:palmeiras:santos_fc:result",
+      "status": "ok",
+      "quality_score": 4,
+      "evidence": {
+        "page": null,
+        "line": null,
+        "selector": "round 18 table",
+        "quote": "Palmeiras 2 x 0 Santos FC",
+        "table": "resultados"
+      },
+      "payload": {
+        "competition": "brasileirao_serie_a",
+        "season": 2026,
+        "round": 18,
+        "home_team": "Palmeiras",
+        "away_team": "Santos FC",
+        "home_goals": 2,
+        "away_goals": 0,
+        "status": "finished"
+      }
+    },
+    {
+      "record_id": "news-palmeiras-20260615-001",
+      "record_type": "news",
+      "natural_key": "news:https://example.com/noticia-original",
+      "status": "quarentena",
+      "quality_score": 3,
+      "evidence": {
+        "page": null,
+        "line": null,
+        "selector": "article headline",
+        "quote": "Titulo da noticia na fonte",
+        "table": null
+      },
+      "payload": {
+        "competition": "brasileirao_serie_a",
+        "team": "Palmeiras",
+        "title": "Titulo da noticia na fonte",
+        "url": "https://example.com/noticia-original",
+        "published_at": null,
+        "summary": null,
+        "tags": [
+          "palmeiras"
+        ]
+      }
+    },
+    {
+      "record_id": "odds-flamengo-palmeiras-1x2-home-20260615",
+      "record_type": "odds",
+      "natural_key": "brasileirao_serie_a:2026:19:flamengo:palmeiras:odds:bookmaker:1x2:home:2026-06-15T12:00:00-03:00",
+      "status": "quarentena",
+      "quality_score": 2,
+      "evidence": {
+        "page": null,
+        "line": null,
+        "selector": null,
+        "quote": "odd casa 2.10",
+        "table": "odds manuais"
+      },
+      "payload": {
+        "competition": "brasileirao_serie_a",
+        "season": 2026,
+        "round": 19,
+        "home_team": "Flamengo",
+        "away_team": "Palmeiras",
+        "bookmaker": "nome_da_casa",
+        "market": "1x2",
+        "selection": "home",
+        "line": null,
+        "odd": 2.1,
+        "captured_at": "2026-06-15T12:00:00-03:00"
+      }
+    }
+  ]
+}
+

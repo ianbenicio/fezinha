@@ -4,6 +4,8 @@
 
 - `contract-engine-api-web-v0.md` - contrato minimo e retrocompativel entre motor, API e web.
 - `source-catalog-v0.md` - criterios para avaliar sites/fontes e definir uso no banco, motor e UI.
+- `../templates/manual_source_batch_v0.md` - formato para lotes manuais/assistidos antes da validacao.
+- `../templates/notebooklm-extraction-prompt.md` - prompt operacional para extracao sem inferencia.
 - `secoes-28-35-upgrades.md` - mudancas de design recomendadas para a v3 da arquitetura.
 - `secao-36-propriedades-camadas.md` - propriedades obrigatorias para contratos de camada.
 
@@ -13,6 +15,7 @@
 2. Secoes 1-27: arquitetura base, versao 2.0.
 3. Secoes 28-35 (`secoes-28-35-upgrades.md`): upgrades v3.
 4. Catalogo de fontes (`source-catalog-v0.md`): regra de entrada de dados antes de nova ingestao.
+5. Template manual (`../templates/manual_source_batch_v0.md`): contrato de transporte para lotes JSON/CSV.
 
 ## Upgrades v3
 
