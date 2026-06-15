@@ -13,6 +13,7 @@ cada decisao vive e qual arquivo deve ser consultado antes de alterar o fluxo.
 |---|---|---|
 | Regras de trabalho paralelo | `docs/coordination/governanca-operacional.md` | Politica duravel de branches, locks, fases e gates. |
 | Contrato engine -> api -> web v0 | `docs/spec/contract-engine-api-web-v0.md` | Shape aprovado para `/queries` e consumo web. |
+| Catalogo de fontes | `docs/spec/source-catalog-v0.md` | Criterios para sites/fontes, entrada no banco e uso por modulo. |
 | Requisitos do consumidor web | `claude/web-map:docs/contract-v0-requirements-web.md` | Documento do Claude; referencia de necessidades da UI. |
 | Review do contrato pelo Claude | `claude/web-map:docs/reviews/contract-v0-review-claude.md` | Aprova `codex/contract-v0` commit `b50788b`. |
 | Mapa atual do web | `claude/web-map:docs/web-map.md` | Inventario do frontend. |
