@@ -223,9 +223,11 @@ docs/coordination/source-ingestion-flow-tasks.md
 Sequencia resumida:
 
 1. Criar uma lista operacional de fontes em formato YAML/JSON baseada neste
-   documento.
-2. Adicionar CBF Tabelas como primeira fonte formal.
-3. Definir parser de classificacao CBF com CA/CV agregado.
+   documento. Feito em `docs/spec/source-registry-v0.yaml`.
+2. Adicionar CBF Tabelas como primeira fonte formal. Feito em
+   `docs/spec/source-registry-v0.yaml`.
+3. Definir parser de classificacao CBF com CA/CV agregado. Implementado em
+   `engine/ingestion/cbf_tabelas.py`.
 4. Amarrar `radar_time` a este catalogo.
 5. So depois automatizar novas fontes.
 

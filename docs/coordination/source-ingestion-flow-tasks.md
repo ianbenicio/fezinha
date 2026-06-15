@@ -205,12 +205,13 @@ Pode editar: `engine/ingestion/`, `docs/spec/`
 
 Tarefas:
 
-- [ ] Criar registro operacional de fonte `cbf_tabelas`.
-- [ ] Capturar HTML/PDF e salvar snapshot/hash.
-- [ ] Extrair classificacao.
-- [ ] Extrair CA/CV agregado quando disponivel.
+- [x] Criar registro operacional de fonte `cbf_tabelas`.
+- [x] Calcular hash de snapshot local HTML/PDF.
+- [ ] Automatizar captura/download HTML/PDF.
+- [x] Extrair classificacao.
+- [x] Extrair CA/CV agregado quando disponivel.
 - [ ] Extrair jogos/resultados quando disponivel.
-- [ ] Validar contra schema.
+- [x] Validar contra schema.
 - [ ] Alimentar radar MVP: ataque, defesa, forma, consistencia, casa/fora e
       disciplina quando CA/CV existir.
 
@@ -219,6 +220,19 @@ Criterio de pronto:
 - CBF consegue alimentar dado factual sem NotebookLM.
 - Disciplina sai de `dado_ausente` para `ok` apenas quando CA/CV for extraido
   com fonte.
+
+Artefatos parciais:
+
+- `docs/spec/source-registry-v0.yaml`
+- `engine/ingestion/cbf_tabelas.py`
+- `engine/test_cbf_tabelas.py`
+
+Status parcial:
+
+- HTML salvo da CBF Serie B em 2026-06-15 foi parseado com 20 linhas de
+  classificacao e 20 registros de disciplina, todos validados como lote
+  `manual_source_batch_v0`.
+- Upsert, fetch automatico e jogos/resultados via HTML ainda nao foram feitos.
 
 ### C2. Fonte 2 - ge.globo
 

@@ -74,6 +74,22 @@ python -m engine.ingestion.manual_source_batch caminho/do/lote.csv --format csv
 O validador e somente leitura. Ele checa fonte, evidencia, duplicidade,
 tipos, limites de sanidade e imprime um relatorio. Ele nao grava no Supabase.
 
+## CBF Tabelas HTML
+
+Para classificacao e CA/CV agregado da pagina oficial da CBF:
+
+```bash
+python -m engine.ingestion.cbf_tabelas caminho/cbf.html \
+  --liga brasileirao_serie_b \
+  --season 2026 \
+  --round 13 \
+  --source-url https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-b/2026 \
+  --fetched-at 2026-06-15T11:27:00-03:00
+```
+
+O parser gera um lote `manual_source_batch_v0`, calcula hash do snapshot local e
+valida o lote. Ele ainda nao faz download automatico nem upsert no banco.
+
 ## Agendamento (produção)
 
 Cron — GitHub Actions (grátis) ou worker Railway:

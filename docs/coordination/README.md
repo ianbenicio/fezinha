@@ -14,6 +14,7 @@ cada decisao vive e qual arquivo deve ser consultado antes de alterar o fluxo.
 | Regras de trabalho paralelo | `docs/coordination/governanca-operacional.md` | Politica duravel de branches, locks, fases e gates. |
 | Contrato engine -> api -> web v0 | `docs/spec/contract-engine-api-web-v0.md` | Shape aprovado para `/queries` e consumo web. |
 | Catalogo de fontes | `docs/spec/source-catalog-v0.md` | Criterios para sites/fontes, entrada no banco e uso por modulo. |
+| Registry operacional de fontes | `docs/spec/source-registry-v0.yaml` | Fonte `cbf_tabelas` e parser HTML de classificacao/CA-CV. |
 | Tarefas de ingestao de fontes | `docs/coordination/source-ingestion-flow-tasks.md` | Roadmap do fluxo URL/PDF/NotebookLM -> validacao -> staging -> banco. |
 | Staging/quarentena manual | `docs/spec/manual-ingestion-staging-v0.md` | Decisao B1: arquivo local + relatorio antes de migration. |
 | Template de lote manual | `docs/templates/manual_source_batch_v0.md` | Formato canonico para JSON/CSV antes do validador. |
@@ -35,6 +36,7 @@ docs/
   spec/
     README.md
     contract-engine-api-web-v0.md     # contrato tecnico versionado
+    source-registry-v0.yaml           # fontes e parsers operacionais
     manual-ingestion-staging-v0.md    # staging/quarentena antes de migration
   reviews/
     *.md                              # reviews quando forem trazidos para branch de integracao

@@ -1,0 +1,44 @@
+version: source_registry_v0
+status: proposed
+updated_at: 2026-06-15
+
+sources:
+  - id: cbf_tabelas
+    name: CBF - Tabelas
+    base_url: https://www.cbf.com.br/
+    type: oficial_primaria
+    operational_status: ativo
+    reliability: 4
+    cost: gratis
+    license_use: revisar_tos
+    automation: scraper_html
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: por_rodada
+    parser:
+      module: engine.ingestion.cbf_tabelas
+      outputs:
+        - manual_source_batch_v0
+      supported_data:
+        - classificacao
+        - disciplina_agregada
+      pending_data:
+        - jogos
+        - resultados
+    endpoints:
+      brasileirao_serie_a_2026: https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-a/2026
+      brasileirao_serie_b_2026: https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-b/2026
+    allowed_uses:
+      - catalogo
+      - times
+      - radar
+      - backtest
+    prohibited_uses:
+      - odds
+      - escalacao
+      - lesao
+      - xg
+    notes:
+      - "Parser v0 extrai classificacao e CA/CV agregado do HTML salvo ou baixado."
+      - "Jogos/resultados seguem cobertos pelo parser de PDF CBF ate parser HTML de jogos ser validado."
+
