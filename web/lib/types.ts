@@ -1,0 +1,145 @@
+// Tipos do contrato engine -> api -> web (lado consumidor).
+//
+// Baseline = output atual de engine/run.py (ver docs/web-map.md).
+// Campos marcados "contract-v0 (previsto)" antecipam
+// docs/contract-v0-requirements-web.md e serao reconciliados na revisao do
+// contrato (tarefa #5). Nao renomear os campos ja consumidos por /consulta.
+
+export type Liga = "brasileirao_serie_a" | "brasileirao_serie_b";
+
+export type TeamRef = { nome: string; escudo_url?: string | null };
+
+export type MatchStatus = "agendado" | "ao_vivo" | "encerrado" | "adiado";
+
+export type Match = {
+  id: number;
+  liga: string;
+  data_hora: string | null;
+  rodada: number | null;
+  status: string;
+  placar_casa?: number | null;
+  placar_fora?: number | null;
+  mandante: TeamRef | null;
+  visitante: TeamRef | null;
+};
+
+export type Partida = {
+  data_hora: string;
+  rodada: number | null;
+  status: string;
+  local?: string;
+  mandante: TeamRef | null;
+  visitante: TeamRef | null;
+};
+
+export type Noticia = {
+  titulo: string;
+  url: string;
+  fonte: string;
+  liga?: string | null;
+  imagem_url?: string | null;
+  publicado_em?: string | null;
+};
+
+export type Consulta = {
+  id: number;
+  match_id: number;
+  complexidade: string;
+  custo_creditos: number;
+  mercados: string[];
+  status: string;
+  created_at: string;
+};
+
+// --- Saida do motor (Resultado) ---
+
+// status por camada no trace
+export type CamadaStatus = "ok" | "baseline" | "pendente";
+
+export type TraceItem = {
+  camada: string;
+  topico: string;
+  status: CamadaStatus;
+  resumo?: string;
+  justificativa?: string;
+  fonte?: string;
+  entrada: unknown;
+  saida: unknown;
+  qualidade?: number; // contract-v0 (previsto): 0-5
+};
+
+export type ForcaComparativa = {
+  mandante: { ifc: number; leitura: string };
+  visitante: { ifc: number; leitura: string };
+  diferenca_ifc: number;
+  expectativa_mandante: number;
+  leitura: string;
+  adversarios_comuns: {
+    adversario: string;
+    resultado_mandante: string;
+    resultado_visitante: string;
+  }[];
+  jogos_no_grafo: number;
+};
+
+export type AgregadorResultado = {
+  prob_casa: number;
+  prob_empate: number;
+  prob_visitante: number;
+  resultado_mais_provavel: string;
+  placar_provavel: string;
+};
+export type AgregadorGols = {
+  over_15: number;
+  over_25: number;
+  over_35: number;
+  btts: number;
+};
+export type AgregadorEscanteios = {
+  over_85: number;
+  over_95: number;
+  over_105: number;
+};
+
+// modo do motor. Hoje vem em agregador.meta.modo ("nucleo_apenas") + bool baseline.
+// contract-v0 (previsto): promover para agregador.modo.
+export type ModoMotor = "nucleo_apenas" | "modelo_only" | "fallback_pesos";
+
+export type Agregador = {
+  resultado: AgregadorResultado;
+  gols: AgregadorGols;
+  escanteios: AgregadorEscanteios;
+  modo?: ModoMotor; // contract-v0 (previsto)
+};
+
+// engine ja emite os 3 abaixo; web passa a renderizar (folga, sem breaking change)
+export type IndiceConfianca = { valor: number | null; leitura: string };
+
+export type Alerta = { tipo: string; descricao: string };
+
+export type BancaRec = {
+  mercado: string;
+  selecao: string;
+  prob_modelo: number;
+  odd: number;
+  ev: number;
+  stake_sugerido: number;
+  confianca: number;
+  decisao: "apostar" | "evitar" | "aguardar_escalacao";
+};
+export type Banca = {
+  perfil_em_uso: string;
+  recomendacoes: BancaRec[];
+  nota?: string; // ex: "sem odds: sem EV/banca"
+};
+
+export type Resultado = {
+  partida?: { mandante: string; visitante: string };
+  baseline?: boolean;
+  forca_comparativa?: ForcaComparativa | null;
+  agregador?: Agregador;
+  indice_confianca?: IndiceConfianca;
+  alertas?: Alerta[];
+  banca?: Banca;
+  trace?: TraceItem[];
+};
