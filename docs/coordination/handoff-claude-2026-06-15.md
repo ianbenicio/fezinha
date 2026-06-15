@@ -2,106 +2,141 @@
 
 Autor: Codex
 Escopo: sincronizacao local entre worktrees `fezinha` e `fezinha-claude`
-Status: ativo
+Status: atualizado
 
 ## Resumo curto
 
-O contrato `engine -> api -> web v0` foi escrito por Codex no branch
-`codex/contract-v0` e o Claude registrou review aprovado no branch
-`claude/web-map`, referenciando o commit `b50788b`.
+O branch Codex `codex/contract-v0` agora tem:
 
-O proximo bloqueio real do lado Codex e implementar a Fase 1B:
-agregador fallback executavel, sem inventar EV/banca quando odds estiverem
-ausentes. O radar visual ainda depende do payload/shape de radar que Codex deve
-entregar depois do fallback.
+- contrato `engine -> api -> web v0`;
+- validador de lote manual `manual_source_batch_v0`;
+- parser CBF HTML para classificacao, CA/CV e jogos;
+- contrato e processador local `radar_time_v0`;
+- registro operacional de CBF e ge.globo;
+- avaliacao de fontes futuras: API-Football, Open-Meteo e sites de palpite.
 
-## Estado verificado localmente
+O radar ja tem shape tecnico e processamento local em `engine/radar_time.py`.
+Ainda nao existe endpoint API nem persistencia no banco para o radar. A UI pode
+seguir com mock/contrato, mas nao deve declarar modo real conectado ao backend.
+
+## Estado local verificado
 
 | Item | Estado |
 |---|---|
-| Repo oficial Codex | `C:\Users\ianfl\Documents\fezinha` |
+| Repo Codex | `C:\Users\ianfl\Documents\fezinha` |
 | Worktree Claude | `C:\Users\ianfl\Documents\fezinha-claude` |
-| Branch Codex ativo para contrato | `codex/contract-v0` |
-| Branch Claude | `claude/web-map` |
-| Commit Claude dashboard | `56cbc2c feat(web): dashboard refinado + previewavel` |
-| Commit Codex contrato | `b50788b feat: define engine api web contract v0` |
-| Preview Claude | `http://localhost:3100/preview` respondeu `HTTP 200` nesta verificacao |
+| Branch Codex | `codex/contract-v0` |
+| Branch Claude informado | `claude/web-map` |
+| Ultimo commit Codex conhecido | `06849b3 docs: evaluate future data sources` |
+| Push remoto | nao feito |
 
-## Entregas Codex ja existentes
+## Arquivos que Claude deve ler
+
+1. `docs/spec/contract-engine-api-web-v0.md`
+2. `docs/spec/radar-time-v0.md`
+3. `docs/spec/source-catalog-v0.md`
+4. `docs/spec/source-registry-v0.yaml`
+5. `docs/spec/future-source-evaluation-v0.md`
+6. `docs/coordination/source-ingestion-flow-tasks.md`
+
+## Entregas Codex relevantes
+
+### Contrato de analise
 
 - `docs/spec/contract-engine-api-web-v0.md`
-  - Define envelope de `POST /queries`.
-  - Mantem retrocompatibilidade de `agregador.resultado`, `agregador.gols` e
-    `agregador.escanteios`.
-  - Define `agregador.modo` com `nucleo_apenas`, `modelo_only`,
-    `fallback_pesos`.
-  - Formaliza `indice_confianca`, `alertas`, `banca` e `trace`.
-  - Declara `forca_comparativa` como explicativa nesta fase.
 - `engine/test_contract_v0.py`
-  - Testa shape minimo do payload atual contra o contrato v0.
 - `engine/run.py`
-  - Ajustado para expor os campos do contrato v0.
-- `docs/coordination/governanca-operacional.md`
-  - Define regras de trabalho paralelo, locks e fases.
 
-## Entregas Claude verificadas
+Define envelope minimo de `POST /queries`, modo operacional, trace, alertas,
+banca e forca comparativa explicativa.
 
-No branch `claude/web-map`:
+### Ingestao manual e fonte CBF
 
-- `docs/web-map.md`
-- `docs/contract-v0-requirements-web.md`
-- `docs/reviews/contract-v0-review-claude.md`
-- `web/lib/types.ts`
-- `web/lib/mock.ts`
-- `web/components/states.tsx`
-- `web/components/DashboardView.tsx`
-- `web/app/preview/page.tsx`
-- ajustes em `/consulta`, `/historico` e pagina inicial.
+- `docs/templates/manual_source_batch_v0.md`
+- `docs/templates/manual_source_batch_v0.schema.json`
+- `docs/templates/notebooklm-extraction-prompt.md`
+- `engine/ingestion/manual_source_batch.py`
+- `engine/ingestion/cbf_tabelas.py`
+- `engine/test_manual_source_batch.py`
+- `engine/test_cbf_tabelas.py`
 
-O review do Claude aprova o contrato do Codex e fecha o gate do consumidor web.
+O parser CBF local consegue gerar lote validado sem escrever no banco. Em teste
+com HTML salvo da CBF Serie B, extraiu classificacao, disciplina e jogos.
 
-## Dependencias entre agentes
+### Radar por time
 
-### Codex deve seguir agora
+- `docs/spec/radar-time-v0.md`
+- `engine/radar_time.py`
+- `engine/test_radar_time.py`
 
-1. Integrar/confirmar o contrato v0 como base da Fase 1B.
-2. Implementar agregador fallback executavel.
-3. Preservar a regra: nenhuma camada le output de outra; fusao so no agregador.
-4. Garantir que sem odds validas:
-   - `banca.recomendacoes` fique vazia;
-   - EV/stake nao sejam calculados por suposicao;
-   - UI receba alerta/mensagem de indisponibilidade.
-5. Depois disso, definir payload do radar.
+Eixos MVP:
 
-### Claude pode seguir sem bloquear Codex
+- `forca_ofensiva`
+- `solidez_defensiva`
+- `forma_recente`
+- `consistencia`
+- `contexto_casa_fora`
+- `controle_disciplinar`
 
-- Refinar componentes visuais ja mockados.
-- Padronizar `Loading`, `EmptyState`, `ErrorState` em calendario, noticias e
-  historico.
-- Preparar componente de radar com mock local, desde que nao declare contrato
-  real nem conecte no backend antes do payload Codex.
+Estados por eixo:
 
-### Claude deve aguardar Codex
+- `ok`
+- `baixa_amostra`
+- `dado_ausente`
+- `quarentena`
+- `conflito`
+- `fonte_vencida`
 
-- Radar real.
-- Modo real do radar no backend.
-- Visual final de banca/EV caso dependa de odds ou agregador fallback ainda nao
-  entregue.
+Regra obrigatoria para UI: eixo sem dado usa `null`, apagado/tracejado, nunca
+valor neutro inventado como 50.
 
-## Arquivos e conflitos esperados
+### Fontes futuras
 
-Baixo risco de conflito tecnico:
+- API-Football: `futuro`, depende de custo, chave, cobertura Serie A/B 2026 e
+  confirmacao real de xG.
+- Open-Meteo: `futuro`, depende de catalogo de estadios com latitude/longitude
+  e backtest antes de peso no agregador.
+- Sites de palpite: `quarentena`, sem uso em agregador, banca ou radar
+  numerico sem backtest cego.
 
-- Claude alterou principalmente `web/` e docs de review/mapa.
-- Codex alterou `engine/`, `docs/spec/`, `.gitignore`, README e docs de
-  coordenacao.
+## O que Claude pode fazer agora
 
-Risco de conflito conceitual:
+- Revisar `docs/spec/radar-time-v0.md` como consumidor web.
+- Implementar ou ajustar mock do componente de radar usando exatamente o shape
+  `radar_time_v0`.
+- Renderizar estados de fonte/eixo: `ok`, `baixa_amostra`, `dado_ausente`,
+  `quarentena`, `conflito`, `fonte_vencida`.
+- Exibir tooltip com fonte, janela, qualidade e `valor_bruto`.
+- Usar o mesmo componente para:
+  - pagina do time: um radar com `contexto: "geral"`;
+  - analise de partida: dois radares sobrepostos, mandante `casa` e visitante
+    `fora`.
 
-- `docs/reviews/contract-v0-review-claude.md` esta no branch do Claude, nao no
-  branch Codex atual.
-- Em branch de integracao, trazer o review para `docs/reviews/` ou manter
-  referencia explicita ao branch `claude/web-map`.
+## O que Claude deve esperar
+
+- Endpoint API real para `radar_time`.
+- Persistencia/staging no banco.
+- Importacao automatica aprovada para banco.
+- Dados pagos de elenco, lesao, escalacao e xG.
+- Uso de API-Football, Open-Meteo ou sites de palpite em producao.
+
+## Proximas tarefas Codex
+
+1. Aguardar review do Claude sobre `radar-time-v0`.
+2. Se aprovado, criar endpoint API para expor radar por time.
+3. Separadamente, implementar agregador fallback executavel da Fase 1B.
+4. Se o humano aprovar, desenhar/implementar migration de staging B2.
+5. Depois de B2, implementar upsert idempotente B3.
+
+## Cuidados de conflito
+
+- Claude deve evitar editar `engine/`, `db/migrations/` e contratos sem abrir
+  review.
+- Codex deve evitar editar `web/` enquanto o branch `claude/web-map` estiver
+  ativo.
+- Alteracoes em `docs/spec/` devem ser revisadas pelo outro agente quando
+  afetarem contrato.
+- Nao fazer push ate ordem humana.
 
 ## Nao stagear
 
@@ -110,20 +145,10 @@ Risco de conflito conceitual:
 - `.next/`
 - `node_modules/`
 
-## Proximo plano recomendado
-
-1. Codex conclui Fase 1B em branch `codex/fallback-aggregator` ou continua a
-   partir de `codex/contract-v0`, conforme decisao humana.
-2. Depois, abrir branch de integracao local para combinar:
-   - `codex/contract-v0`
-   - `codex/forca-config-isolation`
-   - `claude/web-map`
-3. Rodar testes Python e build web.
-4. So depois decidir push/PR.
-
 ## Limites deste handoff
 
-- Nao afirma que o agregador fallback ja foi implementado.
-- Nao afirma que radar real existe.
-- Nao afirma que dados de odds, xG, escalacao ou lesoes estao automatizados.
+- Nao afirma que agregador fallback esta pronto.
+- Nao afirma que radar tem endpoint API.
+- Nao afirma que o banco foi populado.
+- Nao afirma que API-Football, Open-Meteo ou sites de palpite estao ativos.
 - Nao faz push.
