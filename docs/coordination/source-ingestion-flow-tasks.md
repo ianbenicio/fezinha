@@ -123,15 +123,24 @@ Suporte: Codex
 
 Tarefas:
 
-- [ ] Definir onde o relatorio sera revisado.
-- [ ] Definir quem aprova lote manual.
-- [ ] Definir quando lote pode ir para banco.
-- [ ] Definir regra de rollback se lote aprovado estiver errado.
+- [ ] Validar com humano: onde o relatorio sera revisado.
+- [ ] Validar com humano: quem aprova lote manual.
+- [ ] Validar com humano: quando lote pode ir para banco.
+- [ ] Validar com humano: regra de rollback se lote aprovado estiver errado.
 
 Criterio de pronto:
 
 - Existe procedimento documentado.
 - Nenhum lote manual entra no banco sem decisao explicita.
+
+Artefato proposto:
+
+- `docs/spec/manual-batch-approval-v0.md`
+
+Observacao:
+
+- Codex documentou o procedimento, mas A4 continua pendente ate validacao
+  humana explicita.
 
 ## Fase B - Staging e banco
 

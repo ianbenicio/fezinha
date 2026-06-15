@@ -19,6 +19,7 @@ cada decisao vive e qual arquivo deve ser consultado antes de alterar o fluxo.
 | Avaliacao de fontes futuras | `docs/spec/future-source-evaluation-v0.md` | API-Football, Open-Meteo e sites de palpite antes de automacao. |
 | Tarefas de ingestao de fontes | `docs/coordination/source-ingestion-flow-tasks.md` | Roadmap do fluxo URL/PDF/NotebookLM -> validacao -> staging -> banco. |
 | Staging/quarentena manual | `docs/spec/manual-ingestion-staging-v0.md` | Decisao B1: arquivo local + relatorio antes de migration. |
+| Aprovacao de lote manual | `docs/spec/manual-batch-approval-v0.md` | Procedimento proposto para revisar, aprovar e reverter lotes. |
 | Template de lote manual | `docs/templates/manual_source_batch_v0.md` | Formato canonico para JSON/CSV antes do validador. |
 | Prompt de extracao assistida | `docs/templates/notebooklm-extraction-prompt.md` | Prompt para NotebookLM/ferramenta equivalente sem completamento por LLM. |
 | Validador de lote manual | `engine/ingestion/manual_source_batch.py` | Comando local read-only para validar JSON/CSV antes de staging/upsert. |
@@ -42,6 +43,7 @@ docs/
     source-registry-v0.yaml           # fontes e parsers operacionais
     future-source-evaluation-v0.md    # avaliacao de fontes futuras
     manual-ingestion-staging-v0.md    # staging/quarentena antes de migration
+    manual-batch-approval-v0.md       # aprovacao humana de lotes
   reviews/
     *.md                              # reviews quando forem trazidos para branch de integracao
   templates/

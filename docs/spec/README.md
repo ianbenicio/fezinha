@@ -8,6 +8,7 @@
 - `source-registry-v0.yaml` - registro operacional inicial de fontes e parsers.
 - `future-source-evaluation-v0.md` - avaliacao de API-Football, Open-Meteo e sites de palpite.
 - `manual-ingestion-staging-v0.md` - decisao B1 de staging/quarentena antes de migration.
+- `manual-batch-approval-v0.md` - procedimento proposto para aprovacao humana de lotes.
 - `../templates/manual_source_batch_v0.md` - formato para lotes manuais/assistidos antes da validacao.
 - `../templates/notebooklm-extraction-prompt.md` - prompt operacional para extracao sem inferencia.
 - `secoes-28-35-upgrades.md` - mudancas de design recomendadas para a v3 da arquitetura.
@@ -24,6 +25,7 @@
 7. Registry operacional (`source-registry-v0.yaml`): fontes candidatas ligadas a parsers.
 8. Radar por time (`radar-time-v0.md`): payload explicativo para pagina de time e confronto.
 9. Fontes futuras (`future-source-evaluation-v0.md`): avaliacao antes de custo/automacao.
+10. Aprovacao manual (`manual-batch-approval-v0.md`): gate humano antes de banco.
 
 ## Upgrades v3
 
