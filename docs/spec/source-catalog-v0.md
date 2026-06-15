@@ -214,6 +214,14 @@ Uma fonte so passa de `quarentena` ou `futuro` para `ativo` quando:
 
 ## 12. Proximos passos
 
+O detalhamento operacional destas tarefas esta em:
+
+```text
+docs/coordination/source-ingestion-flow-tasks.md
+```
+
+Sequencia resumida:
+
 1. Criar uma lista operacional de fontes em formato YAML/JSON baseada neste
    documento.
 2. Adicionar CBF Tabelas como primeira fonte formal.
