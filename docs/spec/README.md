@@ -7,6 +7,7 @@
 - `radar-time-v0.md` - contrato do radar explicativo por time, fora do agregador.
 - `source-catalog-v0.md` - criterios para avaliar sites/fontes e definir uso no banco, motor e UI.
 - `source-registry-v0.yaml` - registro operacional inicial de fontes e parsers.
+- `source-candidates-2026-06-15.md` - fontes candidatas informadas pelo usuario.
 - `future-source-evaluation-v0.md` - avaliacao de API-Football, Open-Meteo e sites de palpite.
 - `manual-ingestion-staging-v0.md` - decisao B1 de staging/quarentena antes de migration.
 - `manual-batch-approval-v0.md` - procedimento proposto para aprovacao humana de lotes.
@@ -28,6 +29,7 @@
 9. Fontes futuras (`future-source-evaluation-v0.md`): avaliacao antes de custo/automacao.
 10. Aprovacao manual (`manual-batch-approval-v0.md`): gate humano antes de banco.
 11. Agregador fallback (`agregador-fallback-v0.md`): fusao executavel antes de stacking.
+12. Fontes candidatas (`source-candidates-2026-06-15.md`): backlog de fontes a validar.
 
 ## Upgrades v3
 

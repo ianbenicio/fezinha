@@ -163,6 +163,453 @@ sources:
     notes:
       - "Precisa de catalogo de estadios com latitude/longitude antes de uso."
 
+  - id: the_odds_api
+    name: The Odds API
+    base_url: https://the-odds-api.com/
+    type: mercado_odds
+    operational_status: futuro
+    reliability: 3
+    cost: gratis_ou_pago_conforme_uso
+    license_use: revisar_tos
+    automation: api
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: pre_jogo
+    parser:
+      module: futuro
+      outputs:
+        - odds_staging
+      supported_data:
+        - odds_1x2
+        - odds_totals
+        - bookmakers
+        - odds_historicas_futuras
+      pending_validation:
+        - cobertura_brasileirao_serie_a_2026
+        - cobertura_brasileirao_serie_b_2026
+        - mercados_disponiveis_no_brasil
+        - custo_por_rotina
+        - mapeamento_times
+    evidence_urls:
+      - https://the-odds-api.com/
+    allowed_uses:
+      - odds_staging
+      - agregador_futuro
+      - backtest_futuro
+    prohibited_uses:
+      - banca_sem_calibracao
+      - stake_sem_backtest
+    notes:
+      - "Candidata principal para automacao de odds; nao usar em banca sem probabilidade calibrada."
+      - "Odds precisam de bookmaker, mercado, timestamp, linha e source_url."
+
+  - id: oddsportal
+    name: OddsPortal
+    base_url: https://www.oddsportal.com/
+    type: mercado_odds
+    operational_status: futuro
+    reliability: 3
+    cost: gratis_com_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual_ou_scraper_a_validar
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: pre_jogo
+    parser:
+      module: futuro
+      outputs:
+        - odds_staging
+      supported_data:
+        - odds_1x2
+        - odds_over_under
+        - odds_btts
+        - movimento_odds
+      pending_validation:
+        - termos_uso_para_automacao
+        - cobertura_brasileirao_serie_a_2026
+        - cobertura_brasileirao_serie_b_2026
+        - granularidade_historica
+    evidence_urls:
+      - https://www.oddsportal.com/
+    allowed_uses:
+      - pesquisa
+      - odds_manual
+      - backtest_futuro
+    prohibited_uses:
+      - scraper_sem_revisao_tos
+      - banca_sem_calibracao
+    notes:
+      - "Bom candidato para movimento de mercado, mas automacao depende de termos e estabilidade de captura."
+
+  - id: bet365
+    name: Bet365
+    base_url: https://www.bet365.com/
+    type: mercado_odds
+    operational_status: manual
+    reliability: 3
+    cost: conta_e_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: pre_jogo
+    parser:
+      module: futuro
+      outputs:
+        - odds_manual
+      supported_data:
+        - odds_escanteios
+        - odds_cartoes
+        - odds_mercados_especificos
+      pending_validation:
+        - termos_uso
+        - formato_de_coleta_manual
+    evidence_urls:
+      - https://www.bet365.com/
+    allowed_uses:
+      - entrada_manual_validada
+      - pesquisa
+    prohibited_uses:
+      - scraper_sem_revisao_tos
+      - banca_sem_calibracao
+    notes:
+      - "Usar apenas como entrada manual validada enquanto nao houver API/licenca apropriada."
+
+  - id: transfermarkt_br
+    name: Transfermarkt BR
+    base_url: https://www.transfermarkt.com.br/
+    type: base_estrutural
+    operational_status: futuro
+    reliability: 3
+    cost: gratis_com_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual_ou_scraper_a_validar
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: mensal
+    parser:
+      module: futuro
+      outputs:
+        - team_roster_staging
+      supported_data:
+        - elenco
+        - valores_mercado
+        - transferencias
+      pending_validation:
+        - termos_uso_para_automacao
+        - cobertura_times_brasileiros_2026
+        - identificadores_jogadores
+    evidence_urls:
+      - https://www.transfermarkt.com.br/
+    allowed_uses:
+      - pesquisa
+      - elenco_futuro
+      - contexto_estrutural
+    prohibited_uses:
+      - probabilidade_direta
+      - escalacao_confirmada
+      - banca
+    notes:
+      - "Valor de mercado pode ser variavel exploratoria futura; nao e sinal direto de aposta."
+
+  - id: ogol
+    name: oGol
+    base_url: https://www.ogol.com.br/
+    type: base_historica
+    operational_status: futuro
+    reliability: 3
+    cost: gratis_com_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual_ou_scraper_a_validar
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: mensal
+    parser:
+      module: futuro
+      outputs:
+        - historical_matches_staging
+      supported_data:
+        - historico_confrontos
+        - fichas_jogos
+        - resultados_historicos
+      pending_validation:
+        - termos_uso_para_automacao
+        - cobertura_brasileirao_2026
+        - chaves_de_deduplicacao
+    evidence_urls:
+      - https://www.ogol.com.br/
+    allowed_uses:
+      - pesquisa
+      - backtest_futuro
+      - h2h_exploratorio
+    prohibited_uses:
+      - h2h_com_peso_alto_sem_backtest
+      - banca
+    notes:
+      - "H2H deve ter peso baixo e ser validado; historico direto costuma ter amostra pequena."
+
+  - id: footstats
+    name: FootStats
+    base_url: https://www.footstats.com.br/
+    type: base_estatistica
+    operational_status: futuro
+    reliability: 2
+    cost: desconhecido
+    license_use: revisar_tos
+    automation: manual_ou_scraper_a_validar
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: mensal
+    parser:
+      module: futuro
+      outputs:
+        - stats_staging
+      supported_data:
+        - historico_confrontos
+        - estatisticas
+      pending_validation:
+        - url_resolve
+        - termos_uso
+        - cobertura_brasileirao_2026
+        - campos_disponiveis
+    allowed_uses:
+      - pesquisa
+    prohibited_uses:
+      - banco_prod_sem_validacao
+      - motor_estatistico_sem_parser
+      - banca
+    notes:
+      - "Fonte citada como candidata; ainda nao validada nesta sessao."
+
+  - id: fbref
+    name: FBref
+    base_url: https://fbref.com/
+    type: performance_stats
+    operational_status: futuro
+    reliability: 3
+    cost: gratis_com_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual_ou_scraper_a_validar
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: por_jogo
+    parser:
+      module: futuro
+      outputs:
+        - match_performance_staging
+      supported_data:
+        - xg
+        - xga
+        - passes
+        - passes_progressivos
+        - ppda_se_disponivel
+      pending_validation:
+        - cobertura_brasileirao_serie_a_2026
+        - cobertura_brasileirao_serie_b_2026
+        - disponibilidade_xg
+        - termos_uso_para_automacao
+    evidence_urls:
+      - https://fbref.com/
+    allowed_uses:
+      - pesquisa
+      - radar_futuro
+      - motor_futuro
+    prohibited_uses:
+      - xg_presumido
+      - banco_prod_sem_snapshot
+      - banca_sem_backtest
+    notes:
+      - "xG e PPDA nao podem ser presumidos; precisam existir para a liga/temporada alvo."
+
+  - id: sofascore
+    name: SofaScore
+    base_url: https://www.sofascore.com/
+    type: performance_stats
+    operational_status: futuro
+    reliability: 3
+    cost: gratis_com_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual_ou_scraper_a_validar
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: por_jogo
+    parser:
+      module: futuro
+      outputs:
+        - match_performance_staging
+      supported_data:
+        - finalizacoes
+        - posse_bola
+        - desarmes
+        - interceptacoes
+        - escanteios
+        - cartoes
+        - faltas
+        - movimento_odds
+      pending_validation:
+        - termos_uso_para_automacao
+        - cobertura_brasileirao_serie_a_2026
+        - cobertura_brasileirao_serie_b_2026
+        - estabilidade_dos_ids
+    evidence_urls:
+      - https://www.sofascore.com/
+    allowed_uses:
+      - pesquisa
+      - radar_futuro
+      - contexto
+      - motor_futuro
+    prohibited_uses:
+      - scraper_sem_revisao_tos
+      - banco_prod_sem_validacao
+      - banca_sem_backtest
+    notes:
+      - "Boa candidata para estatisticas por jogo, mas precisa de contrato de campos e validacao de captura."
+
+  - id: whoscored
+    name: WhoScored
+    base_url: https://www.whoscored.com/
+    type: performance_stats
+    operational_status: futuro
+    reliability: 3
+    cost: gratis_com_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual_ou_scraper_a_validar
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: por_jogo
+    parser:
+      module: futuro
+      outputs:
+        - match_performance_staging
+      supported_data:
+        - posse_bola
+        - ratings
+        - estatisticas_jogo
+      pending_validation:
+        - termos_uso_para_automacao
+        - cobertura_brasileirao_2026
+        - campos_disponiveis
+    evidence_urls:
+      - https://www.whoscored.com/
+    allowed_uses:
+      - pesquisa
+      - contexto
+      - radar_futuro
+    prohibited_uses:
+      - rating_como_probabilidade
+      - banco_prod_sem_validacao
+      - banca
+    notes:
+      - "Ratings editoriais/algoritmicos nao devem virar probabilidade direta."
+
+  - id: espn_brasil
+    name: ESPN Brasil
+    base_url: https://www.espn.com.br/futebol/
+    type: midia_confiavel
+    operational_status: manual
+    reliability: 3
+    cost: gratis_com_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual_ou_scraper_a_validar
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: semanal
+    parser:
+      module: futuro
+      outputs:
+        - editorial_context_staging
+      supported_data:
+        - noticias
+        - analise
+        - contexto
+      pending_validation:
+        - termos_uso
+        - categorizacao_por_time
+    evidence_urls:
+      - https://www.espn.com.br/futebol/
+    allowed_uses:
+      - contexto
+      - noticias_ui
+      - pesquisa
+    prohibited_uses:
+      - motor_numerico_sem_regra
+      - agregador
+      - banca
+    notes:
+      - "Analise editorial deve ficar separada do motor numerico."
+
+  - id: uol_esporte
+    name: UOL Esporte Futebol
+    base_url: https://www.uol.com.br/esporte/futebol/
+    type: midia_confiavel
+    operational_status: manual
+    reliability: 3
+    cost: gratis_com_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual_ou_scraper_a_validar
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: semanal
+    parser:
+      module: futuro
+      outputs:
+        - editorial_context_staging
+      supported_data:
+        - noticias
+        - analise
+        - contexto
+      pending_validation:
+        - termos_uso
+        - categorizacao_por_time
+    evidence_urls:
+      - https://www.uol.com.br/esporte/futebol/
+    allowed_uses:
+      - contexto
+      - noticias_ui
+      - pesquisa
+    prohibited_uses:
+      - motor_numerico_sem_regra
+      - agregador
+      - banca
+    notes:
+      - "Usar como contexto com link e fonte; nao como dado factual unico para placar/resultado."
+
+  - id: footure
+    name: Footure
+    base_url: https://footure.com.br/
+    type: analise_editorial
+    operational_status: quarentena
+    reliability: 2
+    cost: gratis_com_restricoes_a_validar
+    license_use: revisar_tos
+    automation: manual
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: sob_demanda
+    parser:
+      module: futuro
+      outputs:
+        - editorial_context_staging
+      supported_data:
+        - analise_tatica
+        - contexto
+      pending_validation:
+        - criterios_editoriais
+        - termos_uso
+        - utilidade_empirica
+    evidence_urls:
+      - https://footure.com.br/
+    allowed_uses:
+      - pesquisa
+      - hipotese
+      - contexto_ui
+    prohibited_uses:
+      - motor_numerico_sem_backtest
+      - agregador
+      - banca
+    notes:
+      - "Boa para gerar hipoteses de leitura tatica; nao e fonte operacional de numero."
+
   - id: sites_palpite
     name: Sites de palpite
     base_url: null
