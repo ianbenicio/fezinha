@@ -10,6 +10,7 @@ Implementação dos contratos de `../layers/` em Python.
 | `dixon_coles.py` | matriz de placar → 1X2, Over/Under, BTTS, escanteios | ✅ |
 | `strength.py` | estima λ (gols esperados) por time | ✅ baseline |
 | `run.py` | orquestra e monta a saída no formato do agregador | ✅ |
+| `radar_time.py` | gera radar explicativo por time a partir de lote CBF validado | ✅ local |
 | `test_dixon_coles.py` | sanity checks (6 testes) | ✅ 6/6 |
 
 ## Como funciona
@@ -44,6 +45,16 @@ Camadas ainda em YAML, a portar:
 
 Enquanto o agregador completo não existe, a saída traz `indice_confianca: null`
 e o alerta `MOTOR_PARCIAL`. As probabilidades são do núcleo estatístico apenas.
+
+## Radar por time
+
+`radar_time.py` gera payload `radar_time_v0` a partir de lote
+`manual_source_batch_v0`. O radar é explicativo e não alimenta o agregador,
+EV, stake ou recomendação.
+
+```bash
+python -m engine.test_radar_time
+```
 
 ## Sem dependências externas
 

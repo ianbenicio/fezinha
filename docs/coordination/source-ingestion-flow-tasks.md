@@ -212,7 +212,7 @@ Tarefas:
 - [x] Extrair CA/CV agregado quando disponivel.
 - [x] Extrair jogos/resultados quando disponivel.
 - [x] Validar contra schema.
-- [ ] Alimentar radar MVP: ataque, defesa, forma, consistencia, casa/fora e
+- [x] Alimentar radar MVP: ataque, defesa, forma, consistencia, casa/fora e
       disciplina quando CA/CV existir.
 
 Criterio de pronto:
@@ -224,8 +224,11 @@ Criterio de pronto:
 Artefatos parciais:
 
 - `docs/spec/source-registry-v0.yaml`
+- `docs/spec/radar-time-v0.md`
 - `engine/ingestion/cbf_tabelas.py`
+- `engine/radar_time.py`
 - `engine/test_cbf_tabelas.py`
+- `engine/test_radar_time.py`
 
 Status parcial:
 
@@ -233,7 +236,9 @@ Status parcial:
   classificacao, 20 registros de disciplina e 10 jogos/resultados da rodada,
   todos validados como lote `manual_source_batch_v0`.
 - Entrada por URL ja baixa HTML para snapshot local e calcula hash.
-- Upsert e alimentacao real do radar ainda nao foram feitos.
+- `engine.radar_time` ja gera payload local `radar_time_v0` a partir do lote
+  CBF validado.
+- Upsert, endpoint API e review do Claude ainda nao foram feitos.
 
 ### C2. Fonte 2 - ge.globo
 

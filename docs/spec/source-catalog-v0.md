@@ -228,6 +228,8 @@ Sequencia resumida:
    `docs/spec/source-registry-v0.yaml`.
 3. Definir parser de classificacao CBF com CA/CV agregado e jogos/resultados.
    Implementado em `engine/ingestion/cbf_tabelas.py`.
-4. Amarrar `radar_time` a este catalogo.
-5. So depois automatizar novas fontes.
+4. Amarrar `radar_time` a este catalogo. Implementado localmente em
+   `engine/radar_time.py` e documentado em `docs/spec/radar-time-v0.md`.
+5. Revisar contrato do radar com Claude antes de endpoint/API.
+6. So depois automatizar novas fontes.
 

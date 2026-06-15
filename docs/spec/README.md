@@ -3,6 +3,7 @@
 ## Estrutura
 
 - `contract-engine-api-web-v0.md` - contrato minimo e retrocompativel entre motor, API e web.
+- `radar-time-v0.md` - contrato do radar explicativo por time, fora do agregador.
 - `source-catalog-v0.md` - criterios para avaliar sites/fontes e definir uso no banco, motor e UI.
 - `source-registry-v0.yaml` - registro operacional inicial de fontes e parsers.
 - `manual-ingestion-staging-v0.md` - decisao B1 de staging/quarentena antes de migration.
@@ -20,6 +21,7 @@
 5. Template manual (`../templates/manual_source_batch_v0.md`): contrato de transporte para lotes JSON/CSV.
 6. Staging manual (`manual-ingestion-staging-v0.md`): decisao de quarentena local antes de migration.
 7. Registry operacional (`source-registry-v0.yaml`): fontes candidatas ligadas a parsers.
+8. Radar por time (`radar-time-v0.md`): payload explicativo para pagina de time e confronto.
 
 ## Upgrades v3
 
