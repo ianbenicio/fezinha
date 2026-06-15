@@ -48,7 +48,8 @@ export function TeamRadar({ radar }: { radar: RadarTime }) {
         <span className="text-blue-400">┄</span> perfil (base)
       </p>
 
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="mx-auto block w-full max-w-[320px]">
+      {/* viewBox com folga lateral: labels ancoradas por lado nao clipam */}
+      <svg viewBox={`-44 0 ${SIZE + 88} ${SIZE}`} className="mx-auto block w-full max-w-[360px]">
         {RINGS.map((g, gi) => (
           <polygon
             key={gi}
@@ -59,16 +60,18 @@ export function TeamRadar({ radar }: { radar: RadarTime }) {
         ))}
 
         {radar.eixos.map((e, i) => {
+          const cos = Math.cos(((360 / n) * i - 90) * (Math.PI / 180));
           const [ex, ey] = pt(i, n, R);
-          const [lx, ly] = pt(i, n, R + 18);
+          const [lx, ly] = pt(i, n, R + 14);
           const off = ausente(e);
+          const anchor = Math.abs(cos) < 0.3 ? "middle" : cos > 0 ? "start" : "end";
           return (
             <g key={e.id}>
               <line x1={C} y1={C} x2={ex} y2={ey} stroke="rgba(255,255,255,0.08)" />
               <text
                 x={lx}
                 y={ly}
-                textAnchor="middle"
+                textAnchor={anchor}
                 dominantBaseline="middle"
                 fontSize="9"
                 className={off ? "fill-white/25" : "fill-white/55"}
@@ -94,6 +97,14 @@ export function TeamRadar({ radar }: { radar: RadarTime }) {
           fill="rgba(34,197,94,0.18)"
           stroke="#22c55e"
         />
+
+        {/* marcadores de vertice nos eixos com dado (atual) */}
+        {radar.eixos.map((e, i) => {
+          if (ausente(e)) return null;
+          const r = (Math.max(0, Math.min(100, e.atual as number)) / 100) * R;
+          const [x, y] = pt(i, n, r);
+          return <circle key={e.id} cx={x} cy={y} r={2.6} fill="#22c55e" />;
+        })}
       </svg>
 
       {radar.sinais.length > 0 && (
