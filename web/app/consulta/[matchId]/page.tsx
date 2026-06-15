@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { apiGet, apiPost } from "@/lib/api";
 import type { Partida, Resultado } from "@/lib/types";
+import { Banner, EngineModeBanner, NoBanca } from "@/components/states";
 
 const COMPLEXIDADES = [
   { id: "simples", label: "Simples", custo: 1, desc: "1X2 · só estatístico" },
@@ -125,6 +126,27 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
 
       {ag && (
         <div className="mt-6 space-y-5">
+          {/* Estado do motor + confiança + alertas (contract-v0) */}
+          <EngineModeBanner modo={ag.modo} />
+          {resultado?.alertas?.map((a, i) => (
+            <Banner
+              key={i}
+              tone={a.severidade === "bloqueio" ? "error" : a.severidade === "aviso" ? "warn" : "info"}
+              titulo={a.tipo}
+            >
+              {a.descricao}
+            </Banner>
+          ))}
+          {resultado?.indice_confianca && (
+            <p className="text-xs text-white/50">
+              Confiança:{" "}
+              {resultado.indice_confianca.valor == null
+                ? "indisponível"
+                : pct(resultado.indice_confianca.valor)}{" "}
+              · {resultado.indice_confianca.leitura}
+            </p>
+          )}
+
           {/* Força Comparativa (IFC) */}
           {resultado?.forca_comparativa && (() => {
             const fc = resultado.forca_comparativa!;
@@ -132,10 +154,13 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
             const cv = partida?.visitante?.nome ?? "Visitante";
             return (
               <section className="rounded-lg bg-fz-card p-5">
-                <div className="mb-3 flex items-baseline justify-between">
+                <div className="mb-1 flex items-baseline justify-between">
                   <h2 className="font-semibold">Força comparativa</h2>
                   <span className="text-sm text-fz-green">{LEITURA_COMP[fc.leitura] ?? fc.leitura}</span>
                 </div>
+                <p className="mb-3 text-xs text-white/40">
+                  Leitura alternativa — não é a previsão principal.
+                </p>
                 <div className="mb-1 flex justify-between text-sm">
                   <span>{cm}</span><span className="font-bold">{fc.mandante.ifc}<span className="text-white/40">/100</span></span>
                 </div>
@@ -203,11 +228,8 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
             </div>
           </section>
 
-          {resultado?.baseline && (
-            <p className="rounded bg-yellow-500/10 px-3 py-2 text-xs text-yellow-400">
-              ⚠ Modo baseline — os times ainda não têm força individual (ingestão pendente).
-              Jogos diferentes dão números parecidos por enquanto.
-            </p>
+          {resultado?.banca && resultado.banca.recomendacoes.length === 0 && (
+            <NoBanca nota={resultado.banca.nota} />
           )}
 
           {/* Log / descrição das camadas */}
