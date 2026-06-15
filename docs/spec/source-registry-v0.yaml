@@ -83,3 +83,114 @@ sources:
       - "Classificacao/forma/escudos entram em teams.caracteristicas com _fontes.ge_globo."
       - "Noticias preservam URL original e fonte ge.globo."
       - "Matches ainda nao possuem colunas de proveniencia; usar CBF como fonte factual preferencial para backtest/motor."
+
+  - id: api_football
+    name: API-Football
+    base_url: https://www.api-football.com/
+    type: api_licenciada
+    operational_status: futuro
+    reliability: 4
+    cost: pago
+    license_use: revisar_tos
+    automation: api
+    snapshot_required: false
+    provenance_required: true
+    recommended_frequency: diario
+    parser:
+      module: engine.ingestion.api_football
+      outputs:
+        - supabase_matches
+        - supabase_match_stats
+        - supabase_player_stats
+        - supabase_player_status
+      supported_data:
+        - fixtures
+        - lineups
+        - injuries
+        - statistics
+        - players
+        - odds
+      pending_validation:
+        - cobertura_brasileirao_2026
+        - xg_disponivel
+        - custo_por_rotina
+    evidence_urls:
+      - https://www.api-football.com/pricing
+      - https://www.api-football.com/documentation-v3
+    allowed_uses:
+      - elenco
+      - contexto
+      - radar_futuro
+      - motor_futuro
+    prohibited_uses:
+      - substituir_resultado_oficial_cbf
+    notes:
+      - "Nao promover sem teste real de cobertura da Serie A/B 2026."
+      - "xG nao deve ser presumido; precisa ser confirmado por endpoint/amostra."
+
+  - id: open_meteo
+    name: Open-Meteo
+    base_url: https://open-meteo.com/
+    type: meteorologia
+    operational_status: futuro
+    reliability: 4
+    cost: gratis_ou_pago_conforme_uso
+    license_use: revisar_tos
+    automation: api
+    snapshot_required: false
+    provenance_required: true
+    recommended_frequency: pre_jogo
+    parser:
+      module: futuro
+      outputs:
+        - weather_context
+      supported_data:
+        - temperatura
+        - chuva
+        - probabilidade_precipitacao
+        - vento
+        - rajadas
+      pending_validation:
+        - coordenadas_estadios
+        - impacto_empirico
+    evidence_urls:
+      - https://open-meteo.com/en/docs
+    allowed_uses:
+      - alerta
+      - contexto
+    prohibited_uses:
+      - agregador_sem_backtest
+    notes:
+      - "Precisa de catalogo de estadios com latitude/longitude antes de uso."
+
+  - id: sites_palpite
+    name: Sites de palpite
+    base_url: null
+    type: social_ou_rumor
+    operational_status: quarentena
+    reliability: 1
+    cost: desconhecido
+    license_use: revisar_tos
+    automation: manual
+    snapshot_required: true
+    provenance_required: true
+    recommended_frequency: sob_demanda
+    parser:
+      module: futuro
+      outputs:
+        - external_editorial_signal
+      supported_data:
+        - palpite_editorial
+      pending_validation:
+        - backtest_cego
+        - termos_uso
+    allowed_uses:
+      - pesquisa
+      - hipotese
+    prohibited_uses:
+      - agregador
+      - banca
+      - radar_numerico
+      - motor_estatistico
+    notes:
+      - "Sem prova empirica, nao usar como fato nem como recomendacao."

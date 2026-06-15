@@ -276,13 +276,24 @@ Revisor: humano
 
 Tarefas:
 
-- [ ] Avaliar API-Football antes de pagar/ligar.
-- [ ] Avaliar Open-Meteo para clima.
-- [ ] Manter sites de palpite em quarentena ate prova empirica.
+- [x] Avaliar API-Football antes de pagar/ligar.
+- [x] Avaliar Open-Meteo para clima.
+- [x] Manter sites de palpite em quarentena ate prova empirica.
 
 Criterio de pronto:
 
 - Nenhuma fonte nova vira `ativo` sem passar por promocao de fonte.
+
+Artefatos:
+
+- `docs/spec/future-source-evaluation-v0.md`
+- `docs/spec/source-registry-v0.yaml`
+
+Observacao:
+
+- API-Football e Open-Meteo ficam `futuro`.
+- Sites de palpite ficam `quarentena`.
+- Nenhuma dessas fontes foi ligada ao banco ou ao motor.
 
 ## Fase D - Exibicao e auditoria
 

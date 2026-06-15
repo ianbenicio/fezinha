@@ -16,6 +16,7 @@ cada decisao vive e qual arquivo deve ser consultado antes de alterar o fluxo.
 | Contrato radar por time | `docs/spec/radar-time-v0.md` | Payload explicativo do radar, fora do agregador. |
 | Catalogo de fontes | `docs/spec/source-catalog-v0.md` | Criterios para sites/fontes, entrada no banco e uso por modulo. |
 | Registry operacional de fontes | `docs/spec/source-registry-v0.yaml` | Fonte `cbf_tabelas` e parser HTML de classificacao/CA-CV. |
+| Avaliacao de fontes futuras | `docs/spec/future-source-evaluation-v0.md` | API-Football, Open-Meteo e sites de palpite antes de automacao. |
 | Tarefas de ingestao de fontes | `docs/coordination/source-ingestion-flow-tasks.md` | Roadmap do fluxo URL/PDF/NotebookLM -> validacao -> staging -> banco. |
 | Staging/quarentena manual | `docs/spec/manual-ingestion-staging-v0.md` | Decisao B1: arquivo local + relatorio antes de migration. |
 | Template de lote manual | `docs/templates/manual_source_batch_v0.md` | Formato canonico para JSON/CSV antes do validador. |
@@ -39,6 +40,7 @@ docs/
     contract-engine-api-web-v0.md     # contrato tecnico versionado
     radar-time-v0.md                  # contrato do radar explicativo por time
     source-registry-v0.yaml           # fontes e parsers operacionais
+    future-source-evaluation-v0.md    # avaliacao de fontes futuras
     manual-ingestion-staging-v0.md    # staging/quarentena antes de migration
   reviews/
     *.md                              # reviews quando forem trazidos para branch de integracao
