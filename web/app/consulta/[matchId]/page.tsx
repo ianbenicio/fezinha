@@ -1,6 +1,8 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { apiGet, apiPost } from "@/lib/api";
 
 const COMPLEXIDADES = [
@@ -88,6 +90,7 @@ const STATUS_COR: Record<string, string> = {
 
 export default function ConsultaPage({ params }: { params: Promise<{ matchId: string }> }) {
   const { matchId } = use(params);
+  const router = useRouter();
   const [partida, setPartida] = useState<Partida | null>(null);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -95,10 +98,16 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
   const [logAberto, setLogAberto] = useState(false);
 
   useEffect(() => {
-    apiGet<{ partida: Partida }>(`/catalog/matches/${matchId}`)
-      .then((r) => setPartida(r.partida))
-      .catch(() => setPartida(null));
-  }, [matchId]);
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        router.replace("/login");
+        return;
+      }
+      apiGet<{ partida: Partida }>(`/catalog/matches/${matchId}`)
+        .then((r) => setPartida(r.partida))
+        .catch(() => setPartida(null));
+    });
+  }, [matchId, router]);
 
   async function consultar(complexidade: string) {
     setErro(null);

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { apiGet } from "@/lib/api";
 
 type Consulta = {
@@ -14,15 +16,22 @@ type Consulta = {
 };
 
 export default function HistoricoPage() {
+  const router = useRouter();
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiGet<{ consultas: Consulta[] }>("/queries")
-      .then((r) => setConsultas(r.consultas))
-      .catch(() => setConsultas([]))
-      .finally(() => setLoading(false));
-  }, []);
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        router.replace("/login");
+        return;
+      }
+      apiGet<{ consultas: Consulta[] }>("/queries")
+        .then((r) => setConsultas(r.consultas))
+        .catch(() => setConsultas([]))
+        .finally(() => setLoading(false));
+    });
+  }, [router]);
 
   if (loading) return <p className="text-white/60">Carregando...</p>;
 
