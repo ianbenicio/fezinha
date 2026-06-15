@@ -1,7 +1,7 @@
 # Governanca Operacional do Projeto Fezinha
 
 Status: ativo
-Versao: v0.1
+Versao: v0.2
 Ultima revisao: 2026-06-15
 Escopo: coordenacao entre agentes, humanos e branches do projeto Fezinha
 
@@ -10,6 +10,11 @@ Escopo: coordenacao entre agentes, humanos e branches do projeto Fezinha
 Este documento define como o projeto Fezinha deve ser conduzido quando houver trabalho paralelo entre Codex, Claude Code e humanos.
 
 Ele deve ser seguido durante a evolucao do projeto e alterado quando a realidade do repositorio mudar. Alteracoes neste documento exigem revisao, porque ele define regras de coordenacao, ownership temporario, arquivos travados e gates de validacao.
+
+Indice operacional deste diretorio:
+
+- `docs/coordination/README.md` lista a fonte de verdade por assunto.
+- `docs/coordination/handoff-*.md` guarda resumos datados entre agentes.
 
 ## 2. Principio central do Fezinha
 
@@ -419,3 +424,4 @@ Antes de finalizar:
 | Versao | Data | Mudanca |
 |---|---|---|
 | v0.1 | 2026-06-15 | Criacao do documento de governanca operacional |
+| v0.2 | 2026-06-15 | Adicionado indice de coordenacao e handoff datado para Claude |
