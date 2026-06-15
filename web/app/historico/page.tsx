@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { apiGet } from "@/lib/api";
+import { Loading, EmptyState, ErrorState } from "@/components/states";
 
 type Consulta = {
   id: number;
@@ -19,6 +20,7 @@ export default function HistoricoPage() {
   const router = useRouter();
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -28,18 +30,20 @@ export default function HistoricoPage() {
       }
       apiGet<{ consultas: Consulta[] }>("/queries")
         .then((r) => setConsultas(r.consultas))
-        .catch(() => setConsultas([]))
+        .catch(() => setErro(true))
         .finally(() => setLoading(false));
     });
   }, [router]);
 
-  if (loading) return <p className="text-white/60">Carregando...</p>;
+  if (loading) return <Loading />;
 
   return (
     <div>
       <h1 className="mb-4 text-xl font-bold">Histórico de consultas</h1>
-      {consultas.length === 0 ? (
-        <p className="text-white/60">Nenhuma consulta ainda.</p>
+      {erro ? (
+        <ErrorState mensagem="Não foi possível carregar o histórico." onRetry={() => location.reload()} />
+      ) : consultas.length === 0 ? (
+        <EmptyState titulo="Nenhuma consulta ainda" dica="Faça uma análise no calendário." />
       ) : (
         <table className="w-full text-sm">
           <thead className="text-left text-white/50">

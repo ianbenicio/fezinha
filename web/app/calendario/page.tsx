@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { apiGet } from "@/lib/api";
+import { Loading, EmptyState, ErrorState } from "@/components/states";
 
 type TeamRef = { nome: string };
 type Match = {
@@ -47,6 +48,7 @@ export default function CalendarioPage() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(false);
   const [view, setView] = useState<"semana" | "mes">("semana");
   const [ref, setRef] = useState<Date>(new Date());
   const [liga, setLiga] = useState<string>("todas");
@@ -72,7 +74,7 @@ export default function CalendarioPage() {
             setRef(maisProx);
           }
         })
-        .catch(() => setMatches([]))
+        .catch(() => setErro(true))
         .finally(() => setLoading(false));
     });
   }, [router]);
@@ -115,7 +117,11 @@ export default function CalendarioPage() {
     );
   }
 
-  if (loading) return <p className="text-white/60">Carregando calendário...</p>;
+  if (loading) return <Loading label="Carregando calendário..." />;
+  if (erro)
+    return (
+      <ErrorState mensagem="Não foi possível carregar o calendário." onRetry={() => location.reload()} />
+    );
   const rodadas = Object.entries(porRodada);
 
   return (
@@ -147,7 +153,7 @@ export default function CalendarioPage() {
       </div>
 
       {rodadas.length === 0 ? (
-        <p className="text-white/50">Nenhum jogo neste período. Use ‹ › para navegar.</p>
+        <EmptyState titulo="Nenhum jogo neste período" dica="Use ‹ › para navegar." />
       ) : (
         <div className="space-y-6">
           {rodadas.map(([titulo, jogos]) => (
