@@ -13,8 +13,9 @@ import {
   StaleSource,
   UncalibratedNotice,
 } from "@/components/states";
-import { mockResultadoPorModo } from "@/lib/mock";
+import { mockMatches, mockNews, mockResultadoPorModo } from "@/lib/mock";
 import type { ModoMotor } from "@/lib/types";
+import { DashboardView } from "@/components/DashboardView";
 
 const MODOS: ModoMotor[] = ["nucleo_apenas", "modelo_only", "fallback_pesos"];
 
@@ -28,6 +29,11 @@ export default function PreviewPage() {
           (<code>web/lib/mock.ts</code>). Não usa o engine.
         </p>
       </div>
+
+      <section className="space-y-3">
+        <h2 className="font-semibold">Dashboard (mock)</h2>
+        <DashboardView matches={mockMatches} news={mockNews} />
+      </section>
 
       <section className="space-y-3">
         <h2 className="font-semibold">Genéricos</h2>
