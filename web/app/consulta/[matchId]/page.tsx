@@ -57,6 +57,7 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
   const [erro, setErro] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [logAberto, setLogAberto] = useState(false);
+  const [metaErro, setMetaErro] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -65,8 +66,14 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
         return;
       }
       apiGet<{ partida: Partida }>(`/catalog/matches/${matchId}`)
-        .then((r) => setPartida(r.partida))
-        .catch(() => setPartida(null));
+        .then((r) => {
+          if (!r?.partida) throw new Error("shape inesperado de /catalog/matches/{id}");
+          setPartida(r.partida);
+        })
+        .catch(() => {
+          setPartida(null);
+          setMetaErro(true);
+        });
     });
   }, [matchId, router]);
 
@@ -106,6 +113,12 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
           </div>
         )}
       </div>
+
+      {metaErro && (
+        <Banner tone="muted" titulo="Metadados indisponíveis">
+          Não foi possível carregar os dados da partida. A análise abaixo ainda funciona.
+        </Banner>
+      )}
 
       <p className="mb-3 text-sm text-white/40">Escolha a profundidade da análise</p>
       <div className="grid gap-3 sm:grid-cols-3">

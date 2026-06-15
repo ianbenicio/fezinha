@@ -23,7 +23,10 @@ export default function TimeDetailPage({ params }: { params: Promise<{ teamId: s
         return;
       }
       apiGet<{ time: TeamDetail }>(`/catalog/teams/${teamId}`)
-        .then((r) => setDetail(r.time))
+        .then((r) => {
+          if (!r?.time?.resumo) throw new Error("shape inesperado de /catalog/teams/{id}");
+          setDetail(r.time);
+        })
         .catch(() => {
           setDetail(mockTeamDetail);
           setMockUsado(true);

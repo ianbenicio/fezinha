@@ -48,7 +48,10 @@ export default function TimesPage() {
         return;
       }
       apiGet<{ times: TeamSummary[] }>("/catalog/teams")
-        .then((r) => setTeams(r.times))
+        .then((r) => {
+          if (!Array.isArray(r?.times)) throw new Error("shape inesperado de /catalog/teams");
+          setTeams(r.times);
+        })
         .catch(() => {
           setTeams(mockTeams);
           setMockUsado(true);
