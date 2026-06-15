@@ -8,6 +8,9 @@ import type {
   Match,
   Noticia,
   RadarEixo,
+  RadarEixoStatus,
+  RadarFonte,
+  RadarJanela,
   RadarTime,
   Resultado,
   TeamDetail,
@@ -200,14 +203,23 @@ export const mockResultadoPorModo = {
 
 // --- Seção de times (mock) ---
 
-const REF = { liga: "brasileirao_a", temporada: 2026 };
+const FONTE_CBF: RadarFonte = {
+  source_id: "cbf_tabelas",
+  source_url:
+    "https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-a/2026",
+  fetched_at: "2026-06-15T09:00:00Z",
+  quality_score: 4,
+  status_fonte: "ativo",
+};
 
 function eixo(
   id: string,
   label: string,
   base: number,
   atual: number,
-  janela = "ultimos_10",
+  valor_bruto: Record<string, unknown>,
+  janela: RadarJanela = { tipo: "ultimos_resultados", jogos: 5 },
+  status: RadarEixoStatus = "ok",
   qualidade = 4,
 ): RadarEixo {
   return {
@@ -215,13 +227,14 @@ function eixo(
     label,
     base,
     atual,
-    delta: atual - base,
-    valor_bruto: atual,
+    delta: Math.round((atual - base) * 100) / 100,
     qualidade,
-    status: "ok",
+    status,
     janela,
-    referencia: REF,
-    fontes: ["CBF resultados"],
+    referencia: { liga: null, temporada: null },
+    fontes: [FONTE_CBF],
+    valor_bruto,
+    modificadores: [],
   };
 }
 
@@ -231,46 +244,53 @@ const eixoDisciplina: RadarEixo = {
   base: null,
   atual: null,
   delta: null,
-  valor_bruto: null,
   qualidade: 0,
   status: "dado_ausente",
-  janela: "temporada",
-  referencia: REF,
+  janela: { tipo: "indisponivel", jogos: 0 },
+  referencia: { liga: null, temporada: null },
   fontes: [],
+  valor_bruto: {},
+  modificadores: [],
   motivo_ausencia: "CA/CV ainda nao ingeridos da CBF",
 };
 
 export function mockRadarTime(
-  time: { id: number; nome: string; escudo_url: string | null },
-  contexto: "casa" | "fora" | "neutro" = "neutro",
+  team: { id: number | null; slug: string; nome: string; liga: string },
+  contexto: "geral" | "casa" | "fora" = "geral",
 ): RadarTime {
+  const ctxLabel = contexto === "fora" ? "Fora" : contexto === "casa" ? "Casa" : "Geral";
   return {
-    modo: "resultado",
-    escala: { min: 0, max: 100 },
-    time,
+    schema_version: "radar_time_v0",
+    team,
+    referencia: { liga: "brasileirao_serie_a", temporada: 2026, rodada: 14 },
     contexto,
     eixos: [
-      eixo("forca_ofensiva", "Ataque", 72, 78),
-      eixo("solidez_defensiva", "Defesa", 64, 60),
-      eixo("forma_recente", "Forma", 70, 82, "ultimos_5"),
-      eixo("consistencia", "Consistência", 55, 52),
-      eixo("contexto_casa_fora", contexto === "fora" ? "Fora" : "Casa", 68, 74),
+      eixo("forca_ofensiva", "Ataque", 78, 78, { gols_por_jogo: 1.7 }, { tipo: "temporada", jogos: 14 }),
+      eixo("solidez_defensiva", "Defesa", 60, 60, { gols_sofridos_por_jogo: 0.9 }, { tipo: "temporada", jogos: 14 }),
+      eixo("forma_recente", "Forma", 82, 82, { pontos: 12, max_pontos: 15 }, { tipo: "ultimos_resultados", jogos: 5 }),
+      eixo("consistencia", "Consistência", 52, 52, { desvio_saldo_gols: 1.4 }, { tipo: "ultimos_resultados", jogos: 8 }),
+      // baixa_amostra: valor existe, mas com ressalva (preservar valor — Codex finding #2)
+      eixo("contexto_casa_fora", ctxLabel, 74, 74, { pontos: 7, max_pontos: 9 }, { tipo: contexto, jogos: 3 }, "baixa_amostra", 2.5),
       eixoDisciplina,
     ],
-    modificadores: [],
-    sinais: ["pico"],
+    meta: {
+      uso: "explicativo",
+      entra_no_agregador: false,
+      fonte_base: "cbf_tabelas",
+      fetched_at: "2026-06-15T09:00:00Z",
+    },
   };
 }
 
 export const mockTeams: TeamSummary[] = [
-  { id: 1, nome: "Alfa SC", escudo_url: null, liga: "brasileirao_serie_a", posicao: 3, pontos: 34, forma: ["V", "V", "E", "D", "V"] },
-  { id: 2, nome: "Beta AC", escudo_url: null, liga: "brasileirao_serie_a", posicao: 11, pontos: 22, forma: ["D", "E", "V", "D", "E"] },
-  { id: 3, nome: "Gama FC", escudo_url: null, liga: "brasileirao_serie_b", posicao: 5, pontos: 30, forma: ["V", "D", "V", "V", "E"] },
+  { id: 1, slug: "alfa-sc", nome: "Alfa SC", escudo_url: null, liga: "brasileirao_serie_a", posicao: 3, pontos: 34, forma: ["V", "V", "E", "D", "V"] },
+  { id: 2, slug: "beta-ac", nome: "Beta AC", escudo_url: null, liga: "brasileirao_serie_a", posicao: 11, pontos: 22, forma: ["D", "E", "V", "D", "E"] },
+  { id: 3, slug: "gama-fc", nome: "Gama FC", escudo_url: null, liga: "brasileirao_serie_b", posicao: 5, pontos: 30, forma: ["V", "D", "V", "V", "E"] },
 ];
 
 export const mockTeamDetail: TeamDetail = {
   resumo: mockTeams[0],
-  radar: mockRadarTime({ id: 1, nome: "Alfa SC", escudo_url: null }, "casa"),
+  radar: mockRadarTime({ id: 1, slug: "alfa-sc", nome: "Alfa SC", liga: "brasileirao_serie_a" }, "casa"),
   estatisticas: [
     { label: "Gols pró/jogo", valor: "1.7", qualidade: 4 },
     { label: "Gols contra/jogo", valor: "0.9", qualidade: 4 },

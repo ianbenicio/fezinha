@@ -1,8 +1,9 @@
 # Seção de Times — estrutura (descrição de times + radar)
 
-> **Estrutura/planejamento — não implementado ainda.** Acordado entre Claude (consumidor web)
-> e Codex. Serve de alvo de mock pro web e de requisitos pros endpoints do Codex.
-> O contrato técnico canônico do `radar_time` será fixado pelo Codex em `docs/spec/` quando implementado.
+> **Mock implementado no web; contrato canônico vigente em [`docs/spec/radar-time-v0.md`](../spec/radar-time-v0.md)**
+> (produtor `engine.radar_time`, branch Codex). Este documento descreve a **UX** da seção.
+> Para o shape do payload, o contrato em `docs/spec/` é a fonte de verdade — o web
+> (`web/lib/types.ts`) está alinhado a ele (`radar_time_v0`).
 
 ## Objetivo
 Página de descrição de time: aspectos técnicos/estatísticos, jogadores, notícias e o **gráfico radar**.
@@ -46,55 +47,33 @@ valor_atual  = valor_base + soma(modificadores)
 valor_bruto  = valor_atual (antes do clamp)  # guardar p/ badges
 valor_exibido = clamp(valor_atual, 0, 100)
 ```
-`valor_bruto` fora de [0,100] → badge `pico` / `crise` / `volatilidade` / `alerta_disciplina`.
-Shrinkage nos eixos de baixa amostra (consistência, casa/fora, e geral com 18 rodadas) — reusa a camada `shrinkage` do Codex.
+> **v0:** sem modificadores contextuais — `base == atual`, `delta = 0`, `modificadores: []`,
+> e o conceito de `sinais` foi **removido** do contrato. Os campos ficam prontos para a v1.
+Shrinkage nos eixos de baixa amostra (consistência, casa/fora) — reusa a camada `shrinkage` do Codex;
+eixos com pouca amostra saem `status: baixa_amostra` (valor exibido com ressalva, não apagado).
 
-### Contrato (alvo de mock — `radar_time`)
-```ts
-radar_time: {
-  modo: "resultado";
-  escala: { min: 0; max: 100 };
-  time: { id: number; nome: string; escudo_url: string | null };
-  contexto: "casa" | "fora" | "neutro";
-  eixos: EixoRadar[];                 // os 6 acima, sempre na mesma ordem
-  modificadores: Modificador[];
-  sinais: ("pico" | "crise" | "volatilidade" | "alerta_disciplina")[];
-}
+### Contrato `radar_time`
+Fonte de verdade: [`docs/spec/radar-time-v0.md`](../spec/radar-time-v0.md) (`schema_version: "radar_time_v0"`).
+O web está alinhado em `web/lib/types.ts` (`RadarTime` / `RadarEixo`). Resumo do shape vigente:
 
-EixoRadar = {
-  id: string;                          // ex "forca_ofensiva"
-  label: string;
-  base: number | null;
-  atual: number | null;
-  delta: number | null;
-  valor_bruto: number | null;
-  qualidade: number;                   // 0-5
-  status: "ok" | "baseline" | "dado_ausente" | "fonte_vencida" | "erro";
-  janela: string;                      // ex "ultimos_10" | "temporada"
-  referencia: { liga: string; temporada: number };
-  fontes: string[];
-  motivo_ausencia?: string;            // quando status != ok
-}
+- `team`: `{ id: number | null; slug: string; nome: string; liga: string }` — `id` é `teams.id` quando
+  enriquecido pela API; `null` no produtor puro do engine. `slug` é a chave de conciliação.
+- `contexto`: `"geral" | "casa" | "fora"`.
+- `eixos[].status`: `ok | baixa_amostra | dado_ausente | quarentena | conflito | fonte_vencida`.
+- `eixos[].base/atual`: escala **0..100** (`null` = ausente/conflito/quarentena; **nunca** vira 50).
+  `delta = atual - base` (0 na v0, sem modificadores).
+- `eixos[].janela`: `{ tipo, jogos }`. `fontes[]`: `{ source_id, source_url, fetched_at, quality_score, status_fonte }`.
+  `valor_bruto`: `Record<string, unknown>`. `modificadores`: `[]` na v0.
+- `meta`: `{ uso: "explicativo", entra_no_agregador: false, fonte_base, fetched_at }`.
 
-Modificador = { eixo: string; delta: number; motivo: string; fonte: string; validade?: string }
-```
-
-Exemplo do eixo ausente (disciplina):
-```json
-{
-  "id": "controle_disciplinar", "label": "Disciplina",
-  "base": null, "atual": null, "delta": null, "valor_bruto": null,
-  "qualidade": 0, "status": "dado_ausente", "janela": "temporada",
-  "referencia": { "liga": "brasileirao_a", "temporada": 2026 },
-  "fontes": [], "motivo_ausencia": "CA/CV ainda nao ingeridos da CBF"
-}
-```
+> Shape antigo (`modo` / `escala` / `time` / `sinais` / `status: baseline`) foi **substituído**
+> pelo `radar_time_v0`. Não usar.
 
 ### Duplo uso (mesmo `radar_time`)
 - **Página do time:** `base` (perfil) vs `atual` (momento) sobrepostos.
 - **Análise da partida:** `mandante.atual` (contexto casa) vs `visitante.atual` (contexto fora) sobrepostos.
-- Componente único: `<TeamRadar teams={1|2} modo="perfil"|"confronto" />`.
-- Tooltip por eixo: base, modificador, fonte, janela, qualidade.
+- Componente: `<TeamRadar radar={radar_time} />` (presentacional). Confronto futuro: dois radares lado a lado.
+- Tooltip por eixo: base, atual, delta, janela, qualidade, fontes, status.
 
 ## Endpoints que o Codex precisa criar
 1. `GET /catalog/teams` — lista (id, nome, escudo, liga, posição, pontos).

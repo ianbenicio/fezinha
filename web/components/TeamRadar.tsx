@@ -1,7 +1,8 @@
-// Radar do time (SVG puro, sem lib de chart).
-// Desenha perfil (base, tracejado) vs momento (atual, solido). Eixos sem dado
-// (status != ok) ficam apagados, valor tratado como 0, com tooltip de ausencia.
-// Exploratorio/explicativo — nao e probabilidade.
+// Radar do time (SVG puro, sem lib de chart). Consome radar_time_v0.
+// Desenha perfil (base, tracejado) vs momento (atual, solido).
+// - dado_ausente / atual==null: eixo apagado, valor tratado como 0, tooltip de ausencia.
+// - baixa_amostra / quarentena / conflito / fonte_vencida: valor EXIBIDO com ressalva (ambar).
+// Exploratorio/explicativo — nao e probabilidade (meta.entra_no_agregador: false).
 
 import type { RadarEixo, RadarTime } from "@/lib/types";
 
@@ -10,13 +11,22 @@ const C = SIZE / 2;
 const R = 100;
 const RINGS = [0.25, 0.5, 0.75, 1];
 
+// status com valor exibivel, mas que merece ressalva visual
+const AVISO = new Set(["baixa_amostra", "quarentena", "conflito", "fonte_vencida"]);
+
 function pt(i: number, n: number, raio: number): [number, number] {
   const ang = ((360 / n) * i - 90) * (Math.PI / 180);
   return [C + raio * Math.cos(ang), C + raio * Math.sin(ang)];
 }
 
+// ausente = sem valor desenhavel (nao contribui para o poligono)
 function ausente(e: RadarEixo): boolean {
-  return e.status !== "ok" || e.atual == null;
+  return e.atual == null || e.status === "dado_ausente";
+}
+
+// aviso = tem valor, mas com ressalva de amostra/qualidade
+function aviso(e: RadarEixo): boolean {
+  return !ausente(e) && AVISO.has(e.status);
 }
 
 function poligono(eixos: RadarEixo[], pick: (e: RadarEixo) => number | null): string {
@@ -30,17 +40,25 @@ function poligono(eixos: RadarEixo[], pick: (e: RadarEixo) => number | null): st
     .join(" ");
 }
 
+function fontesTxt(e: RadarEixo): string {
+  return e.fontes.length ? e.fontes.map((f) => f.source_id).join(", ") : "sem fonte";
+}
+
 function tooltip(e: RadarEixo): string {
-  if (ausente(e)) return `${e.label}: ${e.motivo_ausencia ?? "sem dado"}`;
-  return `${e.label} — base ${e.base} · atual ${e.atual} · ${e.janela} · qualidade ${e.qualidade}/5 · ${e.fontes.join(", ")}`;
+  if (ausente(e)) return `${e.label}: ${e.motivo_ausencia ?? e.status}`;
+  const ressalva = aviso(e) ? ` · ${e.status}` : "";
+  return `${e.label} — base ${e.base} · atual ${e.atual} · Δ ${e.delta ?? 0} · ${e.janela.jogos} jogos (${e.janela.tipo}) · qualidade ${e.qualidade} · ${fontesTxt(e)}${ressalva}`;
 }
 
 export function TeamRadar({ radar }: { radar: RadarTime }) {
   const n = radar.eixos.length;
+  const temAviso = radar.eixos.some(aviso);
+  const temAusente = radar.eixos.some(ausente);
+
   return (
     <div className="rounded-lg bg-fz-card p-4">
       <div className="mb-1 flex items-baseline justify-between">
-        <h2 className="font-semibold">Radar — {radar.time.nome}</h2>
+        <h2 className="font-semibold">Radar — {radar.team.nome}</h2>
         <span className="text-xs text-white/40">exploratório · não validado</span>
       </div>
       <p className="mb-2 text-xs text-white/40">
@@ -64,7 +82,9 @@ export function TeamRadar({ radar }: { radar: RadarTime }) {
           const [ex, ey] = pt(i, n, R);
           const [lx, ly] = pt(i, n, R + 14);
           const off = ausente(e);
+          const warn = aviso(e);
           const anchor = Math.abs(cos) < 0.3 ? "middle" : cos > 0 ? "start" : "end";
+          const cls = off ? "fill-white/25" : warn ? "fill-amber-300/80" : "fill-white/55";
           return (
             <g key={e.id}>
               <line x1={C} y1={C} x2={ex} y2={ey} stroke="rgba(255,255,255,0.08)" />
@@ -74,10 +94,10 @@ export function TeamRadar({ radar }: { radar: RadarTime }) {
                 textAnchor={anchor}
                 dominantBaseline="middle"
                 fontSize="9"
-                className={off ? "fill-white/25" : "fill-white/55"}
+                className={cls}
               >
                 {e.label}
-                {off ? " ⚠" : ""}
+                {off ? " ⚠" : warn ? " *" : ""}
                 <title>{tooltip(e)}</title>
               </text>
             </g>
@@ -98,25 +118,32 @@ export function TeamRadar({ radar }: { radar: RadarTime }) {
           stroke="#22c55e"
         />
 
-        {/* marcadores de vertice nos eixos com dado (atual) */}
+        {/* marcadores de vertice: verde (ok) / ambar (aviso) — eixos com dado */}
         {radar.eixos.map((e, i) => {
           if (ausente(e)) return null;
           const r = (Math.max(0, Math.min(100, e.atual as number)) / 100) * R;
           const [x, y] = pt(i, n, r);
-          return <circle key={e.id} cx={x} cy={y} r={2.6} fill="#22c55e" />;
+          return <circle key={e.id} cx={x} cy={y} r={2.6} fill={aviso(e) ? "#f59e0b" : "#22c55e"} />;
         })}
       </svg>
 
-      {radar.sinais.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {radar.sinais.map((s) => (
-            <span key={s} className="rounded bg-fz-green/20 px-1.5 py-0.5 text-xs text-fz-green">
-              {s}
+      {(temAusente || temAviso) && (
+        <p className="mt-2 text-xs text-white/40">
+          {temAusente && (
+            <span>
+              <span className="text-white/25">⚠ apagado</span> = dado ausente.{" "}
             </span>
-          ))}
-        </div>
+          )}
+          {temAviso && (
+            <span>
+              <span className="text-amber-300/80">* âmbar</span> = baixa amostra/qualidade (valor com ressalva).
+            </span>
+          )}
+        </p>
       )}
-      <p className="mt-2 text-xs text-white/30">Passe o mouse nos eixos para base, fonte e qualidade.</p>
+      <p className="mt-1 text-xs text-white/30">
+        Passe o mouse nos eixos para base, fonte, janela e qualidade.
+      </p>
     </div>
   );
 }

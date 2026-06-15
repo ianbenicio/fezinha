@@ -183,45 +183,60 @@ export type RadarEixoId =
   | "contexto_casa_fora"
   | "controle_disciplinar";
 
+// Status de eixo do radar (radar_time_v0). Distinto de CamadaStatus.
+export type RadarEixoStatus =
+  | "ok"
+  | "baixa_amostra"
+  | "dado_ausente"
+  | "quarentena"
+  | "conflito"
+  | "fonte_vencida";
+
+export type RadarFonte = {
+  source_id: string;
+  source_url: string;
+  fetched_at: string;
+  quality_score: number;
+  status_fonte: string;
+};
+
+export type RadarJanela = { tipo: string; jogos: number };
+
 export type RadarEixo = {
   id: RadarEixoId | string;
   label: string;
-  base: number | null;
-  atual: number | null;
-  delta: number | null;
-  valor_bruto: number | null;
-  qualidade: number; // 0-5
-  status: CamadaStatus;
-  janela: string;
-  referencia: { liga: string; temporada: number };
-  fontes: string[];
-  motivo_ausencia?: string;
+  base: number | null; // escala 0..100
+  atual: number | null; // escala 0..100
+  delta: number | null; // atual - base (-100..100); 0 na v0 sem modificadores
+  qualidade: number; // escala da fonte/lote (NAO a escala do radar)
+  status: RadarEixoStatus;
+  janela: RadarJanela;
+  referencia: { liga: string | null; temporada: number | null };
+  fontes: RadarFonte[];
+  valor_bruto: Record<string, unknown>;
+  modificadores: unknown[];
+  motivo_ausencia?: string | null;
 };
-
-export type RadarModificador = {
-  eixo: string;
-  delta: number;
-  motivo: string;
-  fonte: string;
-  validade?: string;
-};
-
-export type RadarSinal = "pico" | "crise" | "volatilidade" | "alerta_disciplina";
 
 export type RadarTime = {
-  modo: "resultado";
-  escala: { min: number; max: number };
-  time: { id: number; nome: string; escudo_url: string | null };
-  contexto: "casa" | "fora" | "neutro";
+  schema_version: "radar_time_v0";
+  team: { id: number | null; slug: string; nome: string; liga: string };
+  referencia: { liga: string; temporada: number; rodada: number };
+  contexto: "geral" | "casa" | "fora";
   eixos: RadarEixo[];
-  modificadores: RadarModificador[];
-  sinais: RadarSinal[];
+  meta: {
+    uso: "explicativo";
+    entra_no_agregador: false;
+    fonte_base: string;
+    fetched_at: string;
+  };
 };
 
 export type ResultadoForma = "V" | "E" | "D";
 
 export type TeamSummary = {
   id: number;
+  slug?: string; // chave de conciliacao com radar_time.team.slug
   nome: string;
   escudo_url: string | null;
   liga: string;
