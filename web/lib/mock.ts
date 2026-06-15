@@ -4,7 +4,16 @@
 // modelo_only / fallback_pesos). Dados sao SINTETICOS (times/placares/probs
 // ficticios). Reconciliar ao contract-v0 quando o Codex entregar (tarefa #5).
 
-import type { Match, Noticia, Resultado, TraceItem } from "@/lib/types";
+import type {
+  Match,
+  Noticia,
+  RadarEixo,
+  RadarTime,
+  Resultado,
+  TeamDetail,
+  TeamSummary,
+  TraceItem,
+} from "@/lib/types";
 
 export const mockMatches: Match[] = [
   {
@@ -188,3 +197,94 @@ export const mockResultadoPorModo = {
   modelo_only: mockResultadoModeloOnly,
   fallback_pesos: mockResultadoFallbackPesos,
 } as const;
+
+// --- Seção de times (mock) ---
+
+const REF = { liga: "brasileirao_a", temporada: 2026 };
+
+function eixo(
+  id: string,
+  label: string,
+  base: number,
+  atual: number,
+  janela = "ultimos_10",
+  qualidade = 4,
+): RadarEixo {
+  return {
+    id,
+    label,
+    base,
+    atual,
+    delta: atual - base,
+    valor_bruto: atual,
+    qualidade,
+    status: "ok",
+    janela,
+    referencia: REF,
+    fontes: ["CBF resultados"],
+  };
+}
+
+const eixoDisciplina: RadarEixo = {
+  id: "controle_disciplinar",
+  label: "Disciplina",
+  base: null,
+  atual: null,
+  delta: null,
+  valor_bruto: null,
+  qualidade: 0,
+  status: "dado_ausente",
+  janela: "temporada",
+  referencia: REF,
+  fontes: [],
+  motivo_ausencia: "CA/CV ainda nao ingeridos da CBF",
+};
+
+export function mockRadarTime(
+  time: { id: number; nome: string; escudo_url: string | null },
+  contexto: "casa" | "fora" | "neutro" = "neutro",
+): RadarTime {
+  return {
+    modo: "resultado",
+    escala: { min: 0, max: 100 },
+    time,
+    contexto,
+    eixos: [
+      eixo("forca_ofensiva", "Ataque", 72, 78),
+      eixo("solidez_defensiva", "Defesa", 64, 60),
+      eixo("forma_recente", "Forma", 70, 82, "ultimos_5"),
+      eixo("consistencia", "Consistência", 55, 52),
+      eixo("contexto_casa_fora", contexto === "fora" ? "Fora" : "Casa", 68, 74),
+      eixoDisciplina,
+    ],
+    modificadores: [],
+    sinais: ["pico"],
+  };
+}
+
+export const mockTeams: TeamSummary[] = [
+  { id: 1, nome: "Alfa SC", escudo_url: null, liga: "brasileirao_serie_a", posicao: 3, pontos: 34, forma: ["V", "V", "E", "D", "V"] },
+  { id: 2, nome: "Beta AC", escudo_url: null, liga: "brasileirao_serie_a", posicao: 11, pontos: 22, forma: ["D", "E", "V", "D", "E"] },
+  { id: 3, nome: "Gama FC", escudo_url: null, liga: "brasileirao_serie_b", posicao: 5, pontos: 30, forma: ["V", "D", "V", "V", "E"] },
+];
+
+export const mockTeamDetail: TeamDetail = {
+  resumo: mockTeams[0],
+  radar: mockRadarTime({ id: 1, nome: "Alfa SC", escudo_url: null }, "casa"),
+  estatisticas: [
+    { label: "Gols pró/jogo", valor: "1.7", qualidade: 4 },
+    { label: "Gols contra/jogo", valor: "0.9", qualidade: 4 },
+    { label: "IFC", valor: "63", qualidade: 4 },
+    { label: "Saldo", valor: "+12", qualidade: 4 },
+    { label: "Over 2.5 (jogos)", valor: "56%", qualidade: 3 },
+    { label: "Aproveitamento", valor: "63%", qualidade: 4 },
+  ],
+  elenco: [],
+  elenco_disponivel: false,
+  proximos: mockMatches.filter(
+    (m) => m.mandante?.nome === "Alfa SC" || m.visitante?.nome === "Alfa SC",
+  ),
+  ultimos: [],
+  noticias: mockNews,
+  noticias_filtro_aproximado: true,
+};

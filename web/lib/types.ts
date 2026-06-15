@@ -172,3 +172,82 @@ export type Resultado = {
   banca?: Banca;
   trace?: TraceItem[];
 };
+
+// --- Seção de times (radar + detalhe). Mock-first; ver docs/ux/team-section.md ---
+
+export type RadarEixoId =
+  | "forca_ofensiva"
+  | "solidez_defensiva"
+  | "forma_recente"
+  | "consistencia"
+  | "contexto_casa_fora"
+  | "controle_disciplinar";
+
+export type RadarEixo = {
+  id: RadarEixoId | string;
+  label: string;
+  base: number | null;
+  atual: number | null;
+  delta: number | null;
+  valor_bruto: number | null;
+  qualidade: number; // 0-5
+  status: CamadaStatus;
+  janela: string;
+  referencia: { liga: string; temporada: number };
+  fontes: string[];
+  motivo_ausencia?: string;
+};
+
+export type RadarModificador = {
+  eixo: string;
+  delta: number;
+  motivo: string;
+  fonte: string;
+  validade?: string;
+};
+
+export type RadarSinal = "pico" | "crise" | "volatilidade" | "alerta_disciplina";
+
+export type RadarTime = {
+  modo: "resultado";
+  escala: { min: number; max: number };
+  time: { id: number; nome: string; escudo_url: string | null };
+  contexto: "casa" | "fora" | "neutro";
+  eixos: RadarEixo[];
+  modificadores: RadarModificador[];
+  sinais: RadarSinal[];
+};
+
+export type ResultadoForma = "V" | "E" | "D";
+
+export type TeamSummary = {
+  id: number;
+  nome: string;
+  escudo_url: string | null;
+  liga: string;
+  posicao?: number | null;
+  pontos?: number | null;
+  forma?: ResultadoForma[];
+};
+
+export type TeamStat = { label: string; valor: string; qualidade?: number };
+
+export type Jogador = {
+  nome: string;
+  posicao: string;
+  jogos?: number;
+  gols?: number;
+  status?: "disponivel" | "lesionado" | "suspenso" | "duvida";
+};
+
+export type TeamDetail = {
+  resumo: TeamSummary;
+  radar?: RadarTime;
+  estatisticas: TeamStat[];
+  elenco: Jogador[];
+  elenco_disponivel: boolean; // false → placeholder honesto
+  proximos: Match[];
+  ultimos: Match[];
+  noticias: Noticia[];
+  noticias_filtro_aproximado?: boolean;
+};

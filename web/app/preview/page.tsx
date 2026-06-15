@@ -13,9 +13,10 @@ import {
   StaleSource,
   UncalibratedNotice,
 } from "@/components/states";
-import { mockMatches, mockNews, mockResultadoPorModo } from "@/lib/mock";
+import { mockMatches, mockNews, mockResultadoPorModo, mockTeamDetail } from "@/lib/mock";
 import type { ModoMotor } from "@/lib/types";
 import { DashboardView } from "@/components/DashboardView";
+import { TeamView } from "@/components/TeamView";
 
 const MODOS: ModoMotor[] = ["nucleo_apenas", "modelo_only", "fallback_pesos"];
 
@@ -33,6 +34,11 @@ export default function PreviewPage() {
       <section className="space-y-3">
         <h2 className="font-semibold">Dashboard (mock)</h2>
         <DashboardView matches={mockMatches} news={mockNews} />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-semibold">Detalhe do time (mock)</h2>
+        <TeamView detail={mockTeamDetail} />
       </section>
 
       <section className="space-y-3">
