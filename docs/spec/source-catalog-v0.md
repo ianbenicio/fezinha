@@ -226,8 +226,8 @@ Sequencia resumida:
    documento. Feito em `docs/spec/source-registry-v0.yaml`.
 2. Adicionar CBF Tabelas como primeira fonte formal. Feito em
    `docs/spec/source-registry-v0.yaml`.
-3. Definir parser de classificacao CBF com CA/CV agregado. Implementado em
-   `engine/ingestion/cbf_tabelas.py`.
+3. Definir parser de classificacao CBF com CA/CV agregado e jogos/resultados.
+   Implementado em `engine/ingestion/cbf_tabelas.py`.
 4. Amarrar `radar_time` a este catalogo.
 5. So depois automatizar novas fontes.
 

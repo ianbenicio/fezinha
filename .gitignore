@@ -42,6 +42,7 @@ Thumbs.db
 *.log
 data/raw/
 data/cache/
+var/ingestion/
 
 # Temporários de geração/ingestão
 _*.sql

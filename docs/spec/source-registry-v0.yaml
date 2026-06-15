@@ -11,7 +11,7 @@ sources:
     reliability: 4
     cost: gratis
     license_use: revisar_tos
-    automation: scraper_html
+    automation: http_fetch_plus_scraper_html
     snapshot_required: true
     provenance_required: true
     recommended_frequency: por_rodada
@@ -22,7 +22,6 @@ sources:
       supported_data:
         - classificacao
         - disciplina_agregada
-      pending_data:
         - jogos
         - resultados
     endpoints:
@@ -39,6 +38,5 @@ sources:
       - lesao
       - xg
     notes:
-      - "Parser v0 extrai classificacao e CA/CV agregado do HTML salvo ou baixado."
-      - "Jogos/resultados seguem cobertos pelo parser de PDF CBF ate parser HTML de jogos ser validado."
-
+      - "Parser v0 extrai classificacao, CA/CV agregado e jogos/resultados do HTML salvo ou baixado."
+      - "Upsert no banco e alimentacao do radar ainda dependem de contrato e aprovacao."

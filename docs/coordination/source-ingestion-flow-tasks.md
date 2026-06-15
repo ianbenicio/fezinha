@@ -207,10 +207,10 @@ Tarefas:
 
 - [x] Criar registro operacional de fonte `cbf_tabelas`.
 - [x] Calcular hash de snapshot local HTML/PDF.
-- [ ] Automatizar captura/download HTML/PDF.
+- [x] Automatizar captura/download HTML.
 - [x] Extrair classificacao.
 - [x] Extrair CA/CV agregado quando disponivel.
-- [ ] Extrair jogos/resultados quando disponivel.
+- [x] Extrair jogos/resultados quando disponivel.
 - [x] Validar contra schema.
 - [ ] Alimentar radar MVP: ataque, defesa, forma, consistencia, casa/fora e
       disciplina quando CA/CV existir.
@@ -230,9 +230,10 @@ Artefatos parciais:
 Status parcial:
 
 - HTML salvo da CBF Serie B em 2026-06-15 foi parseado com 20 linhas de
-  classificacao e 20 registros de disciplina, todos validados como lote
-  `manual_source_batch_v0`.
-- Upsert, fetch automatico e jogos/resultados via HTML ainda nao foram feitos.
+  classificacao, 20 registros de disciplina e 10 jogos/resultados da rodada,
+  todos validados como lote `manual_source_batch_v0`.
+- Entrada por URL ja baixa HTML para snapshot local e calcula hash.
+- Upsert e alimentacao real do radar ainda nao foram feitos.
 
 ### C2. Fonte 2 - ge.globo
 

@@ -76,7 +76,7 @@ tipos, limites de sanidade e imprime um relatorio. Ele nao grava no Supabase.
 
 ## CBF Tabelas HTML
 
-Para classificacao e CA/CV agregado da pagina oficial da CBF:
+Para classificacao, CA/CV agregado e jogos/resultados da pagina oficial da CBF:
 
 ```bash
 python -m engine.ingestion.cbf_tabelas caminho/cbf.html \
@@ -87,8 +87,17 @@ python -m engine.ingestion.cbf_tabelas caminho/cbf.html \
   --fetched-at 2026-06-15T11:27:00-03:00
 ```
 
+Tambem aceita URL como entrada e salva snapshot local em `var/ingestion/snapshots/`:
+
+```bash
+python -m engine.ingestion.cbf_tabelas https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-b/2026 \
+  --liga brasileirao_serie_b \
+  --season 2026 \
+  --round 13
+```
+
 O parser gera um lote `manual_source_batch_v0`, calcula hash do snapshot local e
-valida o lote. Ele ainda nao faz download automatico nem upsert no banco.
+valida o lote. Ele ainda nao faz upsert no banco.
 
 ## Agendamento (produção)
 
