@@ -46,7 +46,8 @@ Radar explica. Agregador decide. Um nao alimenta o outro.
 radar_time: {
   schema_version: "radar_time_v0"
   team: {
-    id: string
+    id: number | null
+    slug: string
     nome: string
     liga: string
   }
@@ -92,6 +93,30 @@ radar_time: {
 }
 ```
 
+## Identidade do time
+
+- `team.id` e o id canonico do banco (`teams.id`) quando o payload for
+  enriquecido pela API/catalogo.
+- `team.id` fica `null` quando o radar for produzido apenas pelo engine a partir
+  de um lote manual, porque o lote nao carrega identidade do banco.
+- `team.slug` e obrigatorio e vem da normalizacao do nome usado na fonte. Ele e
+  a chave de conciliacao entre lote manual, catalogo e API.
+- A rota web atual continua podendo usar `/times/{team_id}` numerico. O endpoint
+  futuro do radar deve resolver `team_id -> slug`, chamar/consultar o produtor e
+  devolver `team.id` preenchido.
+
+## Escala
+
+- `eixos[].base` e `eixos[].atual` usam escala normalizada de 0 a 100,
+  inclusive.
+- `null` significa dado ausente, conflito ou quarentena; a UI nao deve converter
+  `null` em 50.
+- `eixos[].delta` e `atual - base`; portanto pode variar de -100 a 100. Na v0,
+  sem modificadores contextuais, `base` e `atual` sao iguais e `delta` tende a
+  ser 0 quando o eixo tem dado.
+- `qualidade` segue a escala da fonte/lote e nao deve ser confundida com a
+  escala do radar.
+
 ## Uso na UI
 
 - Pagina do time: usar `contexto: "geral"`.
@@ -115,4 +140,3 @@ Ainda pendente:
 - endpoint API para expor radar por time;
 - persistencia/staging no banco;
 - review do Claude como consumidor web.
-

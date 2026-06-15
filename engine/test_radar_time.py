@@ -116,9 +116,12 @@ def test_build_radars_from_manual_batch():
     radars = build_radars_from_manual_batch(_batch())
     alpha = radars["alpha-fc"]
     assert alpha["schema_version"] == "radar_time_v0"
+    assert alpha["team"]["id"] is None
+    assert alpha["team"]["slug"] == "alpha-fc"
     assert alpha["meta"]["entra_no_agregador"] is False
     axes = {axis["id"]: axis for axis in alpha["eixos"]}
     assert axes["forca_ofensiva"]["status"] == "ok"
+    assert axes["forca_ofensiva"]["referencia"] == {"liga": "brasileirao_serie_a", "temporada": 2026}
     assert axes["controle_disciplinar"]["status"] == "ok"
     assert axes["forma_recente"]["status"] == "ok"
     assert axes["consistencia"]["status"] == "ok"
@@ -143,4 +146,3 @@ if __name__ == "__main__":
             print(f"  FAIL  {fn.__name__}: {exc}")
     print(f"\n{len(fns) - failures}/{len(fns)} passaram")
     raise SystemExit(1 if failures else 0)
-

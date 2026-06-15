@@ -57,6 +57,11 @@ def build_radars_from_manual_batch(
     radars: dict[str, dict[str, Any]] = {}
     for team_key, row in standings.items():
         team_name = str(row.get("team") or team_key)
+        referencia = {
+            "liga": row.get("competition"),
+            "temporada": row.get("season"),
+            "rodada": row.get("round"),
+        }
         axes = [
             _standings_axis(
                 axis_id="forca_ofensiva",
@@ -83,18 +88,20 @@ def build_radars_from_manual_batch(
             _context_axis(team_key, results.get(team_key, []), source, contexto=contexto),
             _discipline_axis(team_key, discipline_values, source, row),
         ]
+        for axis in axes:
+            axis["referencia"] = {
+                "liga": referencia["liga"],
+                "temporada": referencia["temporada"],
+            }
         radars[team_key] = {
             "schema_version": "radar_time_v0",
             "team": {
-                "id": team_key,
+                "id": None,
+                "slug": team_key,
                 "nome": team_name,
                 "liga": row.get("competition"),
             },
-            "referencia": {
-                "liga": row.get("competition"),
-                "temporada": row.get("season"),
-                "rodada": row.get("round"),
-            },
+            "referencia": referencia,
             "contexto": contexto,
             "eixos": axes,
             "meta": {
@@ -445,4 +452,3 @@ def _slug(value: str) -> str:
             out.append("-")
             previous_dash = True
     return "".join(out).strip("-")
-

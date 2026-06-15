@@ -109,6 +109,23 @@ Estados por eixo:
 Regra obrigatoria para UI: eixo sem dado usa `null`, apagado/tracejado, nunca
 valor neutro inventado como 50.
 
+Decisao de identidade:
+
+- `team.id` no payload do radar e `number | null`.
+- No produtor puro `engine.radar_time`, `team.id` sai `null`, porque lote manual
+  nao carrega o id canonico do banco.
+- `team.slug` e obrigatorio e carrega a chave normalizada usada para reconciliar
+  lote manual, catalogo e API.
+- A rota web pode continuar `/times/{team_id}` com id numerico. O endpoint API
+  futuro do radar deve resolver `team_id -> teams.slug`, chamar/consultar o
+  radar e devolver `team.id` preenchido com o id do banco.
+
+Escala do radar:
+
+- `eixos[].base` e `eixos[].atual` sao valores normalizados em 0..100.
+- `null` significa ausencia/conflito/quarentena; nao converter em 50.
+- Na v0, `base == atual` e `delta` tende a 0 porque ainda nao ha modificadores.
+
 ### Fontes futuras
 
 - API-Football: `futuro`, depende de custo, chave, cobertura Serie A/B 2026 e
@@ -141,8 +158,9 @@ valor neutro inventado como 50.
 
 ## Proximas tarefas Codex
 
-1. Aguardar review do Claude sobre `radar-time-v0`.
-2. Se aprovado, criar endpoint API para expor radar por time.
+1. Receber reconcile do Claude contra `radar-time-v0` atualizado.
+2. Se aprovado, criar endpoint API para expor radar por time, preenchendo
+   `team.id` a partir de `teams.id`.
 3. Revisar agregador fallback como consumidor web se a UI usar novos modos/metadados.
 4. Se o humano aprovar, desenhar/implementar migration de staging B2.
 5. Depois de B2, implementar upsert idempotente B3.

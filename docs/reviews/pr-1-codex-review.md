@@ -46,7 +46,8 @@ O PR define:
 O contrato Codex define em `docs/spec/radar-time-v0.md`:
 
 - `schema_version: "radar_time_v0"`;
-- `team.id: string`;
+- `team.id: number | null`;
+- `team.slug: string`;
 - `team.liga: string`;
 - `contexto: "geral" | "casa" | "fora"`;
 - status: `ok`, `baixa_amostra`, `dado_ausente`, `quarentena`, `conflito`,
