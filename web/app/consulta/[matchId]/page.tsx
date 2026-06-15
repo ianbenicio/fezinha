@@ -4,53 +4,13 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { apiGet, apiPost } from "@/lib/api";
+import type { Partida, Resultado } from "@/lib/types";
 
 const COMPLEXIDADES = [
   { id: "simples", label: "Simples", custo: 1, desc: "1X2 · só estatístico" },
   { id: "padrao", label: "Padrão", custo: 3, desc: "Todos os mercados + LLM" },
   { id: "premium", label: "Premium", custo: 5, desc: "Completa + múltiplas + relatório" },
 ];
-
-type TeamRef = { nome: string };
-type Partida = {
-  data_hora: string;
-  rodada: number | null;
-  status: string;
-  local?: string;
-  mandante: TeamRef | null;
-  visitante: TeamRef | null;
-};
-
-type TraceItem = {
-  camada: string; topico: string; status: string;
-  resumo?: string; justificativa?: string; fonte?: string;
-  entrada: unknown; saida: unknown;
-};
-
-type ForcaComparativa = {
-  mandante: { ifc: number; leitura: string };
-  visitante: { ifc: number; leitura: string };
-  diferenca_ifc: number;
-  expectativa_mandante: number;
-  leitura: string;
-  adversarios_comuns: { adversario: string; resultado_mandante: string; resultado_visitante: string }[];
-  jogos_no_grafo: number;
-};
-
-type Resultado = {
-  partida?: { mandante: string; visitante: string };
-  baseline?: boolean;
-  forca_comparativa?: ForcaComparativa | null;
-  agregador?: {
-    resultado: {
-      prob_casa: number; prob_empate: number; prob_visitante: number;
-      resultado_mais_provavel: string; placar_provavel: string;
-    };
-    gols: { over_15: number; over_25: number; over_35: number; btts: number };
-    escanteios: { over_85: number; over_95: number; over_105: number };
-  };
-  trace?: TraceItem[];
-};
 
 const LEITURA_COMP: Record<string, string> = {
   vantagem_forte_casa: "Vantagem forte do mandante",
