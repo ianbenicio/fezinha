@@ -150,9 +150,10 @@ Extraia somente dados explicitamente presentes na fonte. Nao use memoria,
 inferencia, estimativa ou completamento. Campo ausente deve ser null.
 
 Responda apenas em CSV com estas colunas:
-schema_version,batch_id,record_id,record_type,natural_key,source_id,source_url,fetched_at,quality_score,status_fonte,ingestion_method,evidence_json,payload_json
+schema_version,batch_id,created_at,created_by,record_id,record_type,natural_key,record_status,record_quality_score,source_id,source_name,source_url,source_type,fetched_at,source_quality_score,status_fonte,ingestion_method,source_snapshot_path,raw_payload_hash,evidence_json,payload_json
 
 schema_version deve ser manual_source_batch_v0.
+record_quality_score e source_quality_score devem ser numeros de 0 a 5.
 evidence_json e payload_json devem ser JSON valido em uma linha.
 Nao escreva explicacoes fora do CSV.
 ```
@@ -166,4 +167,3 @@ Nao escreva explicacoes fora do CSV.
 - A ferramenta nao completou placares, horarios, CA/CV, odds ou jogadores.
 - Noticias e desfalques vieram com URL ou evidencia localizavel.
 - Odds tem casa, mercado e timestamp.
-

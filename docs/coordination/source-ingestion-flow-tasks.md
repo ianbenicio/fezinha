@@ -97,18 +97,24 @@ Pode editar: `engine/ingestion/`, `engine/test_*`, `docs/`
 
 Tarefas:
 
-- [ ] Criar comando local para validar lote JSON/CSV.
-- [ ] Checar campos obrigatorios.
-- [ ] Checar tipos e limites de sanidade.
-- [ ] Checar duplicidade por chave natural.
-- [ ] Marcar `ok`, `quarentena`, `conflito` ou `rejeitado`.
-- [ ] Gerar relatorio legivel antes de qualquer upsert.
+- [x] Criar comando local para validar lote JSON/CSV.
+- [x] Checar campos obrigatorios.
+- [x] Checar tipos e limites de sanidade.
+- [x] Checar duplicidade por chave natural.
+- [x] Marcar `ok`, `quarentena`, `conflito` ou `rejeitado`.
+- [x] Gerar relatorio legivel antes de qualquer upsert.
 
 Criterio de pronto:
 
 - Lote valido gera relatorio sem escrever no banco por padrao.
 - Lote com valor faltante/fonte ausente nao e aceito como fato.
 - Testes cobrem caso valido, ausente, conflito e duplicado.
+
+Artefatos:
+
+- `engine/ingestion/manual_source_batch.py`
+- `engine/test_manual_source_batch.py`
+- `engine/ingestion/README.md`
 
 ### A4. Processo humano de aprovacao
 

@@ -17,6 +17,7 @@ cada decisao vive e qual arquivo deve ser consultado antes de alterar o fluxo.
 | Tarefas de ingestao de fontes | `docs/coordination/source-ingestion-flow-tasks.md` | Roadmap do fluxo URL/PDF/NotebookLM -> validacao -> staging -> banco. |
 | Template de lote manual | `docs/templates/manual_source_batch_v0.md` | Formato canonico para JSON/CSV antes do validador. |
 | Prompt de extracao assistida | `docs/templates/notebooklm-extraction-prompt.md` | Prompt para NotebookLM/ferramenta equivalente sem completamento por LLM. |
+| Validador de lote manual | `engine/ingestion/manual_source_batch.py` | Comando local read-only para validar JSON/CSV antes de staging/upsert. |
 | Requisitos do consumidor web | `claude/web-map:docs/contract-v0-requirements-web.md` | Documento do Claude; referencia de necessidades da UI. |
 | Review do contrato pelo Claude | `claude/web-map:docs/reviews/contract-v0-review-claude.md` | Aprova `codex/contract-v0` commit `b50788b`. |
 | Mapa atual do web | `claude/web-map:docs/web-map.md` | Inventario do frontend. |

@@ -110,12 +110,14 @@ conseguir gerar JSON confiavel.
 Colunas obrigatorias:
 
 ```csv
-schema_version,batch_id,record_id,record_type,natural_key,source_id,source_url,fetched_at,quality_score,status_fonte,ingestion_method,evidence_json,payload_json
+schema_version,batch_id,created_at,created_by,record_id,record_type,natural_key,record_status,record_quality_score,source_id,source_name,source_url,source_type,fetched_at,source_quality_score,status_fonte,ingestion_method,source_snapshot_path,raw_payload_hash,evidence_json,payload_json
 ```
 
 Regras:
 
 - `schema_version` deve ser `manual_source_batch_v0`.
+- `record_quality_score` e `source_quality_score` sao separados para evitar
+  ambiguidade.
 - `evidence_json` deve ser JSON valido.
 - `payload_json` deve ser JSON valido.
 - Campos desconhecidos podem existir, mas o validador deve ignorar ou marcar
@@ -284,4 +286,3 @@ Este template nao escreve no banco. Ele prepara o lote para:
 3. aprovacao humana;
 4. staging/quarentena;
 5. importacao idempotente futura.
-

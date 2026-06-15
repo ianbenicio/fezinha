@@ -50,6 +50,30 @@ python -m engine.ingestion.api_football injuries   # lesões/suspensões
 - `stats` processa 15 jogos por execução (cota); rode em dias seguidos até cobrir tudo.
 - Idempotente: re-rodar atualiza, não duplica.
 
+## Coleta manual controlada
+
+Antes de automatizar uma fonte, use o template versionado:
+
+```text
+docs/templates/manual_source_batch_v0.md
+```
+
+O prompt para NotebookLM ou ferramenta equivalente fica em:
+
+```text
+docs/templates/notebooklm-extraction-prompt.md
+```
+
+Valide todo lote antes de qualquer staging ou upsert:
+
+```bash
+python -m engine.ingestion.manual_source_batch docs/templates/manual_source_batch_v0.example.json
+python -m engine.ingestion.manual_source_batch caminho/do/lote.csv --format csv
+```
+
+O validador e somente leitura. Ele checa fonte, evidencia, duplicidade,
+tipos, limites de sanidade e imprime um relatorio. Ele nao grava no Supabase.
+
 ## Agendamento (produção)
 
 Cron — GitHub Actions (grátis) ou worker Railway:
