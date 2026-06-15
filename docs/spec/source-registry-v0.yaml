@@ -40,3 +40,46 @@ sources:
     notes:
       - "Parser v0 extrai classificacao, CA/CV agregado e jogos/resultados do HTML salvo ou baixado."
       - "Upsert no banco e alimentacao do radar ainda dependem de contrato e aprovacao."
+
+  - id: ge_globo
+    name: ge.globo
+    base_url: https://ge.globo.com/
+    type: midia_confiavel
+    operational_status: ativo
+    reliability: 3
+    cost: gratis
+    license_use: revisar_tos
+    automation: scraper_html_json_embutido
+    snapshot_required: false
+    provenance_required: true
+    recommended_frequency: diario
+    parser:
+      module: engine.ingestion.ge_globo
+      outputs:
+        - supabase_teams_caracteristicas
+        - supabase_matches
+        - supabase_news
+      supported_data:
+        - classificacao
+        - forma
+        - escudos
+        - jogos_rodada_atual
+        - noticias
+    endpoints:
+      brasileirao_serie_a: https://ge.globo.com/futebol/brasileirao-serie-a/
+      brasileirao_serie_b: https://ge.globo.com/futebol/brasileirao-serie-b/
+    allowed_uses:
+      - catalogo
+      - times
+      - noticias_ui
+      - radar
+    prohibited_uses:
+      - odds
+      - escalacao
+      - lesao
+      - xg
+      - banca
+    notes:
+      - "Classificacao/forma/escudos entram em teams.caracteristicas com _fontes.ge_globo."
+      - "Noticias preservam URL original e fonte ge.globo."
+      - "Matches ainda nao possuem colunas de proveniencia; usar CBF como fonte factual preferencial para backtest/motor."

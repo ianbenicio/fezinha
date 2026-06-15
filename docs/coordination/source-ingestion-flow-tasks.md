@@ -247,14 +247,27 @@ Pode editar: `engine/ingestion/`, `docs/spec/`
 
 Tarefas:
 
-- [ ] Formalizar ge.globo no catalogo operacional.
-- [ ] Revisar campos ja ingeridos.
-- [ ] Adicionar qualidade/fonte quando possivel.
-- [ ] Manter noticias como noticia/contexto, nao fato numerico sem validacao.
+- [x] Formalizar ge.globo no catalogo operacional.
+- [x] Revisar campos ja ingeridos.
+- [x] Adicionar qualidade/fonte quando possivel.
+- [x] Manter noticias como noticia/contexto, nao fato numerico sem validacao.
 
 Criterio de pronto:
 
 - ge.globo segue o mesmo padrao de proveniencia do catalogo.
+
+Artefatos:
+
+- `docs/spec/source-registry-v0.yaml`
+- `engine/ingestion/ge_globo.py`
+- `engine/test_ge_globo_metadata.py`
+
+Observacao:
+
+- `teams.caracteristicas` recebe `_fontes.ge_globo` para classificacao/forma.
+- `news` ja guarda `url`, `fonte` e `coletado_em`.
+- `matches` ainda nao tem colunas de proveniencia; CBF segue preferencial para
+  dado factual de motor/backtest.
 
 ### C3. Fontes futuras
 
