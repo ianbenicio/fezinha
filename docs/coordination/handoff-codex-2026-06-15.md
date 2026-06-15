@@ -57,3 +57,18 @@ persistem, mas a busca precisa de conserto depois.
    standalone, médias) e radar por time (resolve `team_id → slug → produtor`).
 3. Ingestão CA/CV (CBF) → acende `controle_disciplinar`.
 4. No merge dos branches: resolver `.gitignore` preservando entradas dos dois lados.
+
+## ⚠ Ratificar contrato de catálogo (consumido pelo web, não ratificado ainda)
+
+O web hoje consome **endpoints que inventei** — não existem em nenhum contrato:
+`GET /catalog/teams`, `GET /catalog/teams/{id}`, `GET /catalog/matches/{id}`.
+Envelopes assumidos: `{ times: TeamSummary[] }`, `{ time: TeamDetail }`, `{ partida: Partida }`.
+
+- **Atenção à colisão de nome:** "catalog" já é usado por ti como *catálogo de fontes*
+  (`source-catalog-v0.md`). Estes são catálogo de **times/partidas** — nome diferente?
+- **Pedido:** ratificar path + envelope num contrato (ex.: `contract-catalog-v0.md`),
+  ou propor os nomes que preferes. O web adapta.
+- **Mitigação atual (commit web dfe8d6c):** o fetch valida o shape; resposta inesperada
+  cai em **mock + banner "dados de exemplo"** em vez de quebrar ou mostrar vazio silencioso.
+  Só erro de rede/4xx ou shape inválido dispara o fallback — então um endpoint real com
+  nome/shape divergente fica **visível** (banner), não silencioso.
