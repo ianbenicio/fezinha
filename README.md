@@ -28,6 +28,10 @@ Evita dupla contagem de informação. Se odds refletem lesão e teu modelo conte
   - Seções 31-34: 4 camadas novas (H2H, Fatos Relevantes, Visão das Casas, Visão do Time)
   - Seção 35: Arquitetura consolidada v3
 
+### Coordenação
+
+- `docs/coordination/governanca-operacional.md` — Regras de trabalho paralelo entre Codex, Claude Code e humanos: fases, branches, arquivos travados, gates e revisão.
+
 ## Status
 
 - [ ] Integrar seções 28-35 ao documento mestre da spec
