@@ -145,16 +145,20 @@ Revisor obrigatorio: humano
 
 Tarefas:
 
-- [ ] Definir se staging sera tabela nova, arquivo local versionado ou pasta de
+- [x] Definir se staging sera tabela nova, arquivo local versionado ou pasta de
       lotes processados.
-- [ ] Definir metadados minimos de lote.
-- [ ] Definir lifecycle: `recebido`, `validado`, `quarentena`, `aprovado`,
+- [x] Definir metadados minimos de lote.
+- [x] Definir lifecycle: `recebido`, `validado`, `quarentena`, `aprovado`,
       `importado`, `rejeitado`.
-- [ ] Definir politica de retencao de snapshot bruto.
+- [x] Definir politica de retencao de snapshot bruto.
 
 Criterio de pronto:
 
 - Decisao documentada antes de migration.
+
+Artefato:
+
+- `docs/spec/manual-ingestion-staging-v0.md`
 
 ### B2. Migration de staging, se aprovada
 

@@ -15,6 +15,7 @@ cada decisao vive e qual arquivo deve ser consultado antes de alterar o fluxo.
 | Contrato engine -> api -> web v0 | `docs/spec/contract-engine-api-web-v0.md` | Shape aprovado para `/queries` e consumo web. |
 | Catalogo de fontes | `docs/spec/source-catalog-v0.md` | Criterios para sites/fontes, entrada no banco e uso por modulo. |
 | Tarefas de ingestao de fontes | `docs/coordination/source-ingestion-flow-tasks.md` | Roadmap do fluxo URL/PDF/NotebookLM -> validacao -> staging -> banco. |
+| Staging/quarentena manual | `docs/spec/manual-ingestion-staging-v0.md` | Decisao B1: arquivo local + relatorio antes de migration. |
 | Template de lote manual | `docs/templates/manual_source_batch_v0.md` | Formato canonico para JSON/CSV antes do validador. |
 | Prompt de extracao assistida | `docs/templates/notebooklm-extraction-prompt.md` | Prompt para NotebookLM/ferramenta equivalente sem completamento por LLM. |
 | Validador de lote manual | `engine/ingestion/manual_source_batch.py` | Comando local read-only para validar JSON/CSV antes de staging/upsert. |
@@ -34,6 +35,7 @@ docs/
   spec/
     README.md
     contract-engine-api-web-v0.md     # contrato tecnico versionado
+    manual-ingestion-staging-v0.md    # staging/quarentena antes de migration
   reviews/
     *.md                              # reviews quando forem trazidos para branch de integracao
   templates/
