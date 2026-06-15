@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .agregador import agregar_fallback, resultado_mais_provavel
 from .dixon_coles import mercados_de_escanteios, mercados_de_gols
 from .forca_comparativa import comparar
 from .strength import PRIOR_LIGA, estimar_lambdas
@@ -30,6 +31,7 @@ def analisar_partida(
     perfil_risco: str,
     historico: list[dict[str, Any]] | None = None,
     nomes: dict[int, str] | None = None,
+    odds: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     casa = match.get("mandante") or {}
     fora = match.get("visitante") or {}
@@ -154,7 +156,75 @@ def analisar_partida(
             "saida": None,
         })
 
-    # ── camadas pendentes (com fonte planejada) ─────────
+    # --- agregador fallback ---
+    # fallback do agregador: unico ponto de fusao entre camadas independentes
+    ag_decisao = agregar_fallback(gols=gols, comp=comp, forca_real=forca_real, odds=odds)
+    ag_prob = ag_decisao["prob"]
+    odds_info = ag_decisao["odds"]
+
+    if odds_info:
+        trace.append({
+            "camada": "odds",
+            "topico": "Probabilidade implicita do mercado",
+            "status": "ok",
+            "resumo": f"Odds 1X2 validas em {odds_info['casas_validas']} casas; margem media removida.",
+            "justificativa": "Odds foram convertidas para probabilidades implicitas e normalizadas sem margem.",
+            "fonte": "Tabela odds (entrada manual/aprovada).",
+            "entrada": {"linhas_recebidas": len(odds or [])},
+            "saida": odds_info,
+            "qualidade": 3,
+        })
+    else:
+        trace.append({
+            "camada": "odds",
+            "topico": "Probabilidade implicita do mercado",
+            "status": "dado_ausente",
+            "resumo": "Sem odds 1X2 validas com fonte minima.",
+            "justificativa": "O fallback nao usa odds incompletas ou com menos de duas casas validas.",
+            "fonte": "Tabela odds.",
+            "entrada": {"linhas_recebidas": len(odds or [])},
+            "saida": None,
+            "qualidade": 0,
+        })
+
+    trace.append({
+        "camada": "agregador",
+        "topico": "Fusao fallback",
+        "status": "ok",
+        "resumo": f"Modo ativo: {ag_decisao['modo']}. Probabilidade ainda nao calibrada por backtest.",
+        "justificativa": "A fusao acontece somente no agregador. Pesos fixos sao documentados e temporarios.",
+        "fonte": "layers/agregador.yaml + engine/agregador.py",
+        "entrada": {
+            "dixon_coles": {"prob_casa": gols.prob_casa, "prob_empate": gols.prob_empate,
+                            "prob_visitante": gols.prob_visitante},
+            "forca_comparativa": None if not comp else {"expectativa_mandante": comp.expectativa_mandante},
+            "odds": odds_info,
+        },
+        "saida": {
+            "modo": ag_decisao["modo"],
+            "prob_casa": ag_prob.casa,
+            "prob_empate": ag_prob.empate,
+            "prob_visitante": ag_prob.visitante,
+            "pesos_modelo": ag_decisao["pesos_modelo"],
+            "pesos_em_uso": ag_decisao["pesos_em_uso"],
+            "calibrado": False,
+        },
+        "qualidade": 2 if ag_decisao["modo"] == "fallback_pesos" else 1,
+    })
+
+    trace.append({
+        "camada": "banca",
+        "topico": "EV + Kelly",
+        "status": "pendente",
+        "resumo": "Sem recomendacao de banca nesta fase.",
+        "justificativa": "Banca exige probabilidade calibrada e odds validas; fallback nao basta para stake.",
+        "fonte": "layers/banca.yaml",
+        "entrada": {"modo_agregador": ag_decisao["modo"], "calibrado": False},
+        "saida": {"recomendacoes": []},
+        "qualidade": 0,
+    })
+
+    # --- camadas pendentes (com fonte planejada) ---
     pendentes = [
         ("elenco_impacto", "Escalação / impacto de jogadores",
          "Escalações oficiais dos clubes + métricas xG/xA (FBref) → VAEP."),
@@ -162,12 +232,6 @@ def analisar_partida(
          "Tabela e regulamento da competição."),
         ("fatos_relevantes", "Fatos relevantes (notícias)",
          "Notícias verificáveis e comunicados oficiais dos clubes (72h)."),
-        ("odds", "Probabilidade implícita do mercado",
-         "Casas de apostas (Bet365, Pinnacle, Betano...)."),
-        ("agregador", "Fusão calibrada (stacking)",
-         "Combinação treinada das camadas contra resultados históricos."),
-        ("banca", "Recomendação de aposta (EV + Kelly)",
-         "Cruzamento prob. do modelo × odds do mercado."),
     ]
     for nome, topico, fonte in pendentes:
         trace.append({
@@ -181,21 +245,65 @@ def analisar_partida(
             "saida": None,
         })
 
+    camadas_ativas = ["perfil_liga", "pi_ratings", "strength", "dixon_coles", "escanteios", "agregador"]
+    if comp:
+        camadas_ativas.append("forca_comparativa")
+    if odds_info:
+        camadas_ativas.append("odds")
+
+    camadas_pendentes = [p[0] for p in pendentes]
+    if not comp:
+        camadas_pendentes.append("forca_comparativa")
+    if not odds_info:
+        camadas_pendentes.append("odds")
+    camadas_pendentes.append("banca")
+
+    alertas = []
+    if ag_decisao["modo"] == "nucleo_apenas":
+        alertas.append({
+            "tipo": "MOTOR_PARCIAL",
+            "descricao": "So nucleo estatistico ativo; sem forca comparativa, odds ou calibracao.",
+            "severidade": "aviso",
+        })
+    elif ag_decisao["modo"] == "modelo_only":
+        alertas.append({
+            "tipo": "SEM_ODDS",
+            "descricao": "Modelo proprio ativo, mas sem odds validas: sem EV/banca.",
+            "severidade": "aviso",
+        })
+    else:
+        alertas.append({
+            "tipo": "AGREGADOR_FALLBACK",
+            "descricao": "Fusao por pesos fixos ativa, ainda sem stacking/calibracao treinada.",
+            "severidade": "aviso",
+        })
+    alertas.append({
+        "tipo": "BANCA_INDISPONIVEL",
+        "descricao": "Sem probabilidade calibrada: nenhuma recomendacao de stake ou EV e gerada.",
+        "severidade": "info",
+    })
+
+    banca_nota = (
+        "sem odds validas: sem EV/banca"
+        if not odds_info
+        else "fallback sem calibracao: sem EV/stake automatico"
+    )
+
     return {
         "_stub": False,
         "fonte": "nucleo_estatistico_dixon_coles",
-        "baseline": not forca_real,
+        "baseline": not (forca_real or comp),
         "complexidade": complexidade,
         "mercados": mercados,
         "partida": {"mandante": nome_casa, "visitante": nome_fora},
         "lambdas": {"casa": lam.lh, "fora": lam.la, "escanteios": lam.escanteios},
         "agregador": {
-            "modo": "nucleo_apenas",
+            "modo": ag_decisao["modo"],
             "resultado": {
-                "prob_casa": gols.prob_casa,
-                "prob_empate": gols.prob_empate,
-                "prob_visitante": gols.prob_visitante,
-                "resultado_mais_provavel": _mais_provavel(gols),
+                "prob_casa": ag_prob.casa,
+                "prob_empate": ag_prob.empate,
+                "prob_visitante": ag_prob.visitante,
+                "resultado_mais_provavel": resultado_mais_provavel(ag_prob),
                 "placar_provavel": gols.placar_provavel,
                 "top3_placares": gols.top3_placares,
             },
@@ -209,9 +317,13 @@ def analisar_partida(
                 "over_105": escanteios["10.5"],
             },
             "meta": {
-                "modo": "nucleo_apenas",
-                "camadas_ativas": ["perfil_liga", "pi_ratings", "strength", "dixon_coles", "escanteios"],
-                "camadas_pendentes": [p[0] for p in pendentes],
+                "modo": ag_decisao["modo"],
+                "camadas_ativas": camadas_ativas,
+                "camadas_pendentes": camadas_pendentes,
+                "pesos_em_uso": ag_decisao["pesos_em_uso"],
+                "pesos_modelo": ag_decisao["pesos_modelo"],
+                "calibrado": False,
+                "data_ultimo_treino": None,
             },
         },
         "forca_comparativa": None if not comp else {
@@ -224,11 +336,10 @@ def analisar_partida(
             "ajustes_aplicados": comp.ajustes_aplicados,
             "jogos_no_grafo": comp.jogos_no_grafo,
         },
-        "indice_confianca": {"valor": None, "leitura": "indisponivel_ate_agregador_completo"},
-        "alertas": [{"tipo": "MOTOR_PARCIAL",
-                     "descricao": "Só núcleo estatístico ativo; sem contexto/odds/calibração."}],
+        "indice_confianca": {"valor": None, "leitura": "indisponivel_ate_backtest_calibrado"},
+        "alertas": alertas,
         "banca": {"perfil_em_uso": perfil_risco, "recomendacoes": [],
-                  "nota": "banca aguarda agregador calibrado + odds para calcular EV"},
+                  "nota": banca_nota},
         "trace": trace,
     }
 

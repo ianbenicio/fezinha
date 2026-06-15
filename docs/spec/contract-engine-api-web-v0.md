@@ -132,15 +132,16 @@ Valores:
 |---|---|---|
 | `nucleo_apenas` | Nucleo estatistico sem forca individual suficiente ou sem fusao. | Motor parcial. Sem contexto, odds ou calibracao completa. |
 | `modelo_only` | Modelo proprio com sinais internos, mas sem odds validas. | Sem odds: sem EV/banca. |
-| `fallback_pesos` | Fase futura: fusao por pesos fixos documentados. | Fusao fallback, ainda sem stacking treinado. |
+| `fallback_pesos` | Fase 1B: fusao por pesos fixos documentados quando ha odds validas. | Fusao fallback, ainda sem stacking treinado. |
 
 Observacao: o nome `nucleo_apenas` preserva o output atual do motor. Nao usar
 `nucleo_only` no payload.
 
 ## 5. Forca comparativa
 
-Na Fase 1A, `forca_comparativa` e explicativa. Ela nao e a probabilidade final
-do resultado e nao deve competir visualmente com `agregador.resultado`.
+Na Fase 1A, `forca_comparativa` era explicativa. A partir da Fase 1B, ela pode
+ser consumida pelo agregador fallback, mas continua exposta no payload como
+leitura explicativa e rastreavel.
 
 ```ts
 forca_comparativa: null | {
@@ -163,8 +164,8 @@ Regra de exibicao:
 
 - `agregador.resultado` e a probabilidade exibida como previsao principal;
 - `forca_comparativa.expectativa_mandante` e leitura alternativa/explicativa;
-- a fusao da forca comparativa no resultado so deve ocorrer no agregador
-  fallback/real, em tarefa posterior e com teste explicito.
+- a fusao da forca comparativa no resultado ocorre apenas no agregador
+  fallback/real e deve estar registrada no `trace`.
 
 ## 6. Indice de confianca
 

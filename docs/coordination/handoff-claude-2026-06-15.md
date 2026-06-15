@@ -9,6 +9,7 @@ Status: atualizado
 O branch Codex `codex/contract-v0` agora tem:
 
 - contrato `engine -> api -> web v0`;
+- agregador fallback executavel;
 - validador de lote manual `manual_source_batch_v0`;
 - parser CBF HTML para classificacao, CA/CV e jogos;
 - contrato e processador local `radar_time_v0`;
@@ -27,17 +28,18 @@ seguir com mock/contrato, mas nao deve declarar modo real conectado ao backend.
 | Worktree Claude | `C:\Users\ianfl\Documents\fezinha-claude` |
 | Branch Codex | `codex/contract-v0` |
 | Branch Claude informado | `claude/web-map` |
-| Ultimo commit Codex conhecido | `06849b3 docs: evaluate future data sources` |
+| Ultimo commit Codex conhecido | ver `git log` no branch `codex/contract-v0` |
 | Push remoto | nao feito |
 
 ## Arquivos que Claude deve ler
 
 1. `docs/spec/contract-engine-api-web-v0.md`
-2. `docs/spec/radar-time-v0.md`
-3. `docs/spec/source-catalog-v0.md`
-4. `docs/spec/source-registry-v0.yaml`
-5. `docs/spec/future-source-evaluation-v0.md`
-6. `docs/coordination/source-ingestion-flow-tasks.md`
+2. `docs/spec/agregador-fallback-v0.md`
+3. `docs/spec/radar-time-v0.md`
+4. `docs/spec/source-catalog-v0.md`
+5. `docs/spec/source-registry-v0.yaml`
+6. `docs/spec/future-source-evaluation-v0.md`
+7. `docs/coordination/source-ingestion-flow-tasks.md`
 
 ## Entregas Codex relevantes
 
@@ -49,6 +51,23 @@ seguir com mock/contrato, mas nao deve declarar modo real conectado ao backend.
 
 Define envelope minimo de `POST /queries`, modo operacional, trace, alertas,
 banca e forca comparativa explicativa.
+
+### Agregador fallback
+
+- `docs/spec/agregador-fallback-v0.md`
+- `engine/agregador.py`
+- `engine/test_agregador_fallback.py`
+- `api/routers/queries.py`
+
+O motor agora diferencia:
+
+- `nucleo_apenas`: apenas Dixon-Coles baseline;
+- `modelo_only`: modelo proprio com forca comparativa/forca real, sem odds;
+- `fallback_pesos`: modelo proprio + odds 1X2 validas.
+
+Mesmo em `fallback_pesos`, o backend nao gera EV, stake ou recomendacao de
+banca. `banca.recomendacoes` continua vazio porque ainda nao ha calibracao por
+backtest.
 
 ### Ingestao manual e fonte CBF
 
@@ -124,7 +143,7 @@ valor neutro inventado como 50.
 
 1. Aguardar review do Claude sobre `radar-time-v0`.
 2. Se aprovado, criar endpoint API para expor radar por time.
-3. Separadamente, implementar agregador fallback executavel da Fase 1B.
+3. Revisar agregador fallback como consumidor web se a UI usar novos modos/metadados.
 4. Se o humano aprovar, desenhar/implementar migration de staging B2.
 5. Depois de B2, implementar upsert idempotente B3.
 
@@ -147,7 +166,7 @@ valor neutro inventado como 50.
 
 ## Limites deste handoff
 
-- Nao afirma que agregador fallback esta pronto.
+- Agregador fallback esta pronto localmente, mas nao calibrado.
 - Nao afirma que radar tem endpoint API.
 - Nao afirma que o banco foi populado.
 - Nao afirma que API-Football, Open-Meteo ou sites de palpite estao ativos.

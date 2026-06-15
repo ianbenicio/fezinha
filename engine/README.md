@@ -9,6 +9,7 @@ Implementação dos contratos de `../layers/` em Python.
 |--------|-------|--------|
 | `dixon_coles.py` | matriz de placar → 1X2, Over/Under, BTTS, escanteios | ✅ |
 | `strength.py` | estima λ (gols esperados) por time | ✅ baseline |
+| `agregador.py` | fusao fallback entre modelo proprio e odds validas | ✅ local |
 | `run.py` | orquestra e monta a saída no formato do agregador | ✅ |
 | `radar_time.py` | gera radar explicativo por time a partir de lote CBF validado | ✅ local |
 | `test_dixon_coles.py` | sanity checks (6 testes) | ✅ 6/6 |
@@ -43,8 +44,14 @@ Camadas ainda em YAML, a portar:
 - **agregador** — stacking + calibração (funde tudo; hoje só o núcleo opina)
 - **banca** — EV + Kelly (precisa de odds + prob calibrada)
 
-Enquanto o agregador completo não existe, a saída traz `indice_confianca: null`
-e o alerta `MOTOR_PARCIAL`. As probabilidades são do núcleo estatístico apenas.
+Enquanto o agregador completo não existe, `agregador.py` opera em fallback:
+
+- `nucleo_apenas`: somente Dixon-Coles baseline;
+- `modelo_only`: modelo proprio com forca comparativa/forca real, mas sem odds;
+- `fallback_pesos`: modelo proprio + odds 1X2 validas.
+
+Mesmo em `fallback_pesos`, `indice_confianca.valor` continua `null` e
+`banca.recomendacoes` fica vazia. Sem backtest/calibracao, nao ha EV nem stake.
 
 ## Radar por time
 

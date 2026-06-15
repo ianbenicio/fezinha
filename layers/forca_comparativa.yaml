@@ -1,8 +1,8 @@
 # Camada: Força Comparativa / Rating Transitivo (NOVA)
 # Referência: docs/spec/secao-36-propriedades-camadas.md
 # Responde "A venceu B, B venceu C → o que esperar de A x D?" usando o grafo
-# COMPLETO de resultados (Colley + Massey). AGREGA contexto de outras camadas
-# (mando, desfalques, cartões, estilo) sem recoletar — só consome sinais prontos.
+# COMPLETO de resultados (Colley + Massey). Nao consome contexto de outras
+# camadas; ajustes contextuais pertencem ao agregador.
 # Saída: IFC 0-100 por time (50 = média da liga). Fácil pro usuário comum.
 
 id: forca_comparativa
@@ -16,7 +16,7 @@ prioridades:
   - ifc_0_100               # nota única interpretável (50 = média)
   - expectativa_confronto   # diferença IFC → prob via logística (família Elo)
   - adversarios_comuns      # a cadeia A→B→C→D explicada com jogos reais
-  - ajustes_contextuais     # mando + sinais de outras camadas (agrega, não coleta)
+  - mando_de_campo          # ajuste interno fixo para expectativa do mandante
 
 # ── FÓRMULA ─────────────────────────────────────────────
 formula:
@@ -30,21 +30,22 @@ escopo:
   - rating_transitivo_liga
   - comparativo_par_a_par
   - adversarios_comuns
-  - agregacao_de_ajustes_prontos   # consome outputs, não recalcula
+  - mando_de_campo
 
 fora_de_escopo:
-  - coleta_de_desfalques     # → elenco_impacto (aqui só agrega o sinal)
-  - coleta_de_estilo         # → tatica_matchup (idem)
-  - coleta_de_cartoes        # → arbitragem/elenco (idem)
+  - coleta_de_desfalques     # -> elenco_impacto
+  - coleta_de_estilo         # -> tatica_matchup
+  - coleta_de_cartoes        # -> arbitragem/elenco
+  - consumo_de_sinais_contextuais # -> agregador
   - distribuicao_de_placar   # → dixon_coles (IFC não substitui a matriz)
 
 inputs_permitidos:
   - resultados_encerrados_da_liga   # o grafo (matches com placar)
   - mando_de_campo
-  - sinais_prontos_outras_camadas   # ajustes: desfalque, cartao, estilo (quando ativos)
 inputs_proibidos:
   - odds
-  - probabilidade_outras_camadas    # consome SINAIS/ajustes, nunca prob final
+  - output_outras_camadas
+  - probabilidade_outras_camadas
 fonte_minima: 1
 janela_temporal: "temporada_atual"
 
@@ -59,7 +60,7 @@ output_schema:
     - adversario: ""
       resultado_mandante: ""        # ex: "venceu 2x0 (casa)"
       resultado_visitante: ""       # ex: "perdeu 0x1 (fora)"
-  ajustes_aplicados: [string]       # mando + sinais agregados de outras camadas
+  ajustes_aplicados: [string]       # mando aplicado pelo proprio modulo
 
 campo_leitura:
   ativo: false                      # fórmula determinística

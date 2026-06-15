@@ -3,6 +3,7 @@
 ## Estrutura
 
 - `contract-engine-api-web-v0.md` - contrato minimo e retrocompativel entre motor, API e web.
+- `agregador-fallback-v0.md` - fusao fallback executavel, sem calibracao, EV ou stake.
 - `radar-time-v0.md` - contrato do radar explicativo por time, fora do agregador.
 - `source-catalog-v0.md` - criterios para avaliar sites/fontes e definir uso no banco, motor e UI.
 - `source-registry-v0.yaml` - registro operacional inicial de fontes e parsers.
@@ -26,6 +27,7 @@
 8. Radar por time (`radar-time-v0.md`): payload explicativo para pagina de time e confronto.
 9. Fontes futuras (`future-source-evaluation-v0.md`): avaliacao antes de custo/automacao.
 10. Aprovacao manual (`manual-batch-approval-v0.md`): gate humano antes de banco.
+11. Agregador fallback (`agregador-fallback-v0.md`): fusao executavel antes de stacking.
 
 ## Upgrades v3
 
@@ -70,7 +72,7 @@ Antes de inserir dado novo, criar scraper novo ou automatizar fonte nova:
 
 1. Validar `contract-engine-api-web-v0.md` com o consumidor web.
 2. Seguir `source-catalog-v0.md` antes de ingerir ou automatizar novas fontes.
-3. Implementar agregador fallback sem quebrar o contrato v0.
+3. Revisar o agregador fallback implementado em `engine/agregador.py`.
 4. Integrar secoes 28-35 ao documento mestre.
 5. Implementar cada componente novo.
 6. Coletar historico de previsoes para treinar stacking.

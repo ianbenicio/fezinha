@@ -13,6 +13,7 @@ cada decisao vive e qual arquivo deve ser consultado antes de alterar o fluxo.
 |---|---|---|
 | Regras de trabalho paralelo | `docs/coordination/governanca-operacional.md` | Politica duravel de branches, locks, fases e gates. |
 | Contrato engine -> api -> web v0 | `docs/spec/contract-engine-api-web-v0.md` | Shape aprovado para `/queries` e consumo web. |
+| Agregador fallback | `docs/spec/agregador-fallback-v0.md` | Fusao executavel sem calibracao, EV ou stake. |
 | Contrato radar por time | `docs/spec/radar-time-v0.md` | Payload explicativo do radar, fora do agregador. |
 | Catalogo de fontes | `docs/spec/source-catalog-v0.md` | Criterios para sites/fontes, entrada no banco e uso por modulo. |
 | Registry operacional de fontes | `docs/spec/source-registry-v0.yaml` | Fonte `cbf_tabelas` e parser HTML de classificacao/CA-CV. |
@@ -39,6 +40,7 @@ docs/
   spec/
     README.md
     contract-engine-api-web-v0.md     # contrato tecnico versionado
+    agregador-fallback-v0.md          # fusao fallback executavel
     radar-time-v0.md                  # contrato do radar explicativo por time
     source-registry-v0.yaml           # fontes e parsers operacionais
     future-source-evaluation-v0.md    # avaliacao de fontes futuras

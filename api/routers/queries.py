@@ -55,6 +55,18 @@ async def criar_consulta(payload: NovaConsulta, user: CurrentUser = UserDep):
     todos_times = sb.table("teams").select("id, nome").eq("liga", liga).execute()
     nomes = {t["id"]: t["nome"] for t in (todos_times.data or [])}
 
+    # odds manuais sao opcionais. Sem odds validas, o motor segue sem EV/banca.
+    try:
+        odds_res = (
+            sb.table("odds")
+            .select("mercado, selecao, valor, casa_aposta, capturado_em")
+            .eq("match_id", payload.match_id)
+            .execute()
+        )
+        odds = odds_res.data or []
+    except Exception:
+        odds = []
+
     # perfil de risco do usuário (alimenta a banca)
     perfil = (
         sb.table("profiles").select("perfil_risco").eq("id", user.id).single().execute()
@@ -96,6 +108,7 @@ async def criar_consulta(payload: NovaConsulta, user: CurrentUser = UserDep):
             perfil_risco=perfil_risco,
             historico=historico,
             nomes=nomes,
+            odds=odds,
         )
     except Exception:
         # estorna: custo negativo credita de volta e registra a transação (uma só).
