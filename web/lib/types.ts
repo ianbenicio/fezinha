@@ -53,8 +53,14 @@ export type Consulta = {
 
 // --- Saida do motor (Resultado) ---
 
-// status por camada no trace
-export type CamadaStatus = "ok" | "baseline" | "pendente";
+// status por camada no trace (contract-v0 §9)
+export type CamadaStatus =
+  | "ok"
+  | "baseline"
+  | "pendente"
+  | "dado_ausente"
+  | "fonte_vencida"
+  | "erro";
 
 export type TraceItem = {
   camada: string;
@@ -63,9 +69,10 @@ export type TraceItem = {
   resumo?: string;
   justificativa?: string;
   fonte?: string;
+  fonte_ausente?: string;
   entrada: unknown;
   saida: unknown;
-  qualidade?: number; // contract-v0 (previsto): 0-5
+  qualidade?: number; // 0..5
 };
 
 export type ForcaComparativa = {
@@ -79,6 +86,7 @@ export type ForcaComparativa = {
     resultado_mandante: string;
     resultado_visitante: string;
   }[];
+  ajustes_aplicados?: string[];
   jogos_no_grafo: number;
 };
 
@@ -88,8 +96,10 @@ export type AgregadorResultado = {
   prob_visitante: number;
   resultado_mais_provavel: string;
   placar_provavel: string;
+  top3_placares?: unknown[];
 };
 export type AgregadorGols = {
+  over_05?: number;
   over_15: number;
   over_25: number;
   over_35: number;
@@ -101,21 +111,33 @@ export type AgregadorEscanteios = {
   over_105: number;
 };
 
-// modo do motor. Hoje vem em agregador.meta.modo ("nucleo_apenas") + bool baseline.
-// contract-v0 (previsto): promover para agregador.modo.
+// modo do motor (contract-v0 §4.1). Canonico em agregador.modo; espelhado em meta.modo.
 export type ModoMotor = "nucleo_apenas" | "modelo_only" | "fallback_pesos";
 
+export type AgregadorMeta = {
+  modo: ModoMotor;
+  camadas_ativas: string[];
+  camadas_pendentes: string[];
+  pesos_em_uso?: Record<string, number>;
+  data_ultimo_treino?: string | null;
+};
+
 export type Agregador = {
+  modo: ModoMotor;
   resultado: AgregadorResultado;
   gols: AgregadorGols;
   escanteios: AgregadorEscanteios;
-  modo?: ModoMotor; // contract-v0 (previsto)
+  meta: AgregadorMeta;
 };
 
 // engine ja emite os 3 abaixo; web passa a renderizar (folga, sem breaking change)
 export type IndiceConfianca = { valor: number | null; leitura: string };
 
-export type Alerta = { tipo: string; descricao: string };
+export type Alerta = {
+  tipo: string;
+  descricao: string;
+  severidade?: "info" | "aviso" | "bloqueio";
+};
 
 export type BancaRec = {
   mercado: string;
@@ -133,9 +155,16 @@ export type Banca = {
   nota?: string; // ex: "sem odds: sem EV/banca"
 };
 
+export type Lambdas = { casa: number; fora: number; escanteios: number };
+
 export type Resultado = {
+  _stub?: boolean;
+  fonte?: string;
+  complexidade?: string;
+  mercados?: string[];
   partida?: { mandante: string; visitante: string };
   baseline?: boolean;
+  lambdas?: Lambdas;
   forca_comparativa?: ForcaComparativa | null;
   agregador?: Agregador;
   indice_confianca?: IndiceConfianca;

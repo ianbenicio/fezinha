@@ -100,6 +100,9 @@ const PILL: Record<CamadaStatus, { label: string; cls: string }> = {
   ok: { label: "ok", cls: "bg-fz-green/20 text-fz-green" },
   baseline: { label: "baseline", cls: "bg-yellow-500/20 text-yellow-300" },
   pendente: { label: "pendente", cls: "bg-white/10 text-white/40" },
+  dado_ausente: { label: "dado ausente", cls: "bg-white/10 text-white/40" },
+  fonte_vencida: { label: "fonte vencida", cls: "bg-orange-500/20 text-orange-300" },
+  erro: { label: "erro", cls: "bg-red-500/20 text-red-300" },
 };
 
 export function LayerStatusPill({ status }: { status: CamadaStatus }) {
