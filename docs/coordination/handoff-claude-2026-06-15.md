@@ -43,6 +43,24 @@ seguir com mock/contrato, mas nao deve declarar modo real conectado ao backend.
 
 ## Entregas Codex relevantes
 
+### Correcao de baseline em consulta paga
+
+- `api/routers/queries.py`
+- `engine/run.py`
+- `engine/test_contract_v0.py`
+
+A API agora roda o motor em preflight antes de criar consulta/debitar credito.
+Se o resultado for `baseline`/`nucleo_apenas`, retorna HTTP 409 com mensagem de
+dados insuficientes e nao debita credito.
+
+Motivo: baseline puro gera numeros plausiveis, mas sem forca real nem historico
+suficiente para diferenciar os times. Isso nao deve aparecer como "resultado
+provavel" em consulta paga.
+
+Tambem foi corrigida a descricao do prior da liga: o trace nao deve chamar o
+prior temporario de "media do Brasileirao Serie A" quando a partida e de outra
+liga. O status do prior temporario agora e `baseline`.
+
 ### Contrato de analise
 
 - `docs/spec/contract-engine-api-web-v0.md`
@@ -161,9 +179,11 @@ Escala do radar:
 1. Receber reconcile do Claude contra `radar-time-v0` atualizado.
 2. Se aprovado, criar endpoint API para expor radar por time, preenchendo
    `team.id` a partir de `teams.id`.
-3. Revisar agregador fallback como consumidor web se a UI usar novos modos/metadados.
-4. Se o humano aprovar, desenhar/implementar migration de staging B2.
-5. Depois de B2, implementar upsert idempotente B3.
+3. Re-review PR #1 considerando que baseline puro agora deve ser bloqueado na
+   API, nao renderizado como previsao.
+4. Revisar agregador fallback como consumidor web se a UI usar novos modos/metadados.
+5. Se o humano aprovar, desenhar/implementar migration de staging B2.
+6. Depois de B2, implementar upsert idempotente B3.
 
 ## Cuidados de conflito
 

@@ -15,6 +15,11 @@ from .dixon_coles import mercados_de_escanteios, mercados_de_gols
 from .forca_comparativa import comparar
 from .strength import PRIOR_LIGA, estimar_lambdas
 
+LIGA_LABELS = {
+    "brasileirao_serie_a": "Brasileirao Serie A",
+    "brasileirao_serie_b": "Brasileirao Serie B",
+}
+
 
 def _tem_forca(car: dict | None) -> bool:
     return bool(car) and ("ataque" in car or "defesa" in car)
@@ -22,6 +27,24 @@ def _tem_forca(car: dict | None) -> bool:
 
 def _pct(n: float) -> str:
     return f"{n * 100:.1f}%"
+
+
+def resultado_operacional(resultado: dict[str, Any]) -> bool:
+    """True quando o payload tem sinal real suficiente para consulta paga."""
+    modo = (resultado.get("agregador") or {}).get("modo")
+    return not bool(resultado.get("baseline")) and modo != "nucleo_apenas"
+
+
+def motivo_resultado_nao_operacional(resultado: dict[str, Any]) -> str:
+    modo = (resultado.get("agregador") or {}).get("modo") or "desconhecido"
+    alertas = resultado.get("alertas") or []
+    tipos = ", ".join(str(alerta.get("tipo")) for alerta in alertas if alerta.get("tipo"))
+    detalhe = f" Alertas: {tipos}." if tipos else ""
+    return (
+        "Dados insuficientes para analise confiavel: motor em modo "
+        f"{modo}, sem forca real/historico suficiente para diferenciar os times."
+        f"{detalhe} Credito nao debitado."
+    )
 
 
 def analisar_partida(
@@ -39,6 +62,8 @@ def analisar_partida(
     fora_car = fora.get("caracteristicas")
     nome_casa = casa.get("nome", "Mandante")
     nome_fora = fora.get("nome", "Visitante")
+    liga = match.get("liga", "brasileirao_serie_a")
+    liga_label = LIGA_LABELS.get(str(liga), str(liga))
 
     trace: list[dict[str, Any]] = []
 
@@ -46,12 +71,12 @@ def analisar_partida(
     trace.append({
         "camada": "perfil_liga",
         "topico": "Prior da liga (calibração)",
-        "status": "ok",
-        "resumo": "Ponto de partida: médias do Brasileirão Série A.",
-        "justificativa": "Cada liga tem ritmo próprio de gols e fator casa. "
-                         "O modelo parte da média da liga antes de ajustar por time.",
-        "fonte": "Prior estatístico da liga (histórico agregado de temporadas).",
-        "entrada": {"liga": match.get("liga", "brasileirao_serie_a")},
+        "status": "baseline",
+        "resumo": f"Ponto de partida temporario para {liga_label}; ainda nao calibrado por liga.",
+        "justificativa": "Cada liga tem ritmo proprio de gols e fator casa. "
+                         "Nesta fase, o prior e uma constante temporaria, nao uma media validada da liga.",
+        "fonte": "Prior temporario do motor; substituir por calibracao via resultados oficiais.",
+        "entrada": {"liga": liga},
         "saida": dict(PRIOR_LIGA),
     })
 

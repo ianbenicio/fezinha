@@ -1,7 +1,6 @@
 """Consultas de partida — o produto core.
 
-Fluxo: valida saldo → debita crédito (atômico) → roda motor → salva resultado.
-Se o motor falhar após o débito, estorna.
+Fluxo: roda motor em preflight → bloqueia baseline → debita crédito → salva resultado.
 """
 from __future__ import annotations
 
@@ -11,6 +10,7 @@ from pydantic import BaseModel
 from ..core import CurrentUser, UserDep, get_service_client
 from ..pricing import COMPLEXIDADES, custo_de, plano_de
 from engine import analisar_partida
+from engine.run import motivo_resultado_nao_operacional, resultado_operacional
 
 router = APIRouter(prefix="/queries", tags=["consultas"])
 
@@ -73,6 +73,23 @@ async def criar_consulta(payload: NovaConsulta, user: CurrentUser = UserDep):
     )
     perfil_risco = perfil.data["perfil_risco"] if perfil.data else "moderado"
 
+    # Preflight antes do debito. Baseline puro nao e produto confiavel para consulta paga.
+    try:
+        resultado = analisar_partida(
+            match=dados_match,
+            complexidade=payload.complexidade,
+            mercados=plano["mercados"],
+            perfil_risco=perfil_risco,
+            historico=historico,
+            nomes=nomes,
+            odds=odds,
+        )
+    except Exception:
+        raise HTTPException(500, "Falha ao processar a analise; nenhum credito foi debitado")
+
+    if not resultado_operacional(resultado):
+        raise HTTPException(409, motivo_resultado_nao_operacional(resultado))
+
     # cria registro da consulta (status: processando)
     query = (
         sb.table("queries")
@@ -98,26 +115,6 @@ async def criar_consulta(payload: NovaConsulta, user: CurrentUser = UserDep):
     if not debito.data:
         sb.table("queries").update({"status": "erro"}).eq("id", query_id).execute()
         raise HTTPException(402, "Saldo de créditos insuficiente")
-
-    # roda o motor (stub por ora)
-    try:
-        resultado = analisar_partida(
-            match=dados_match,
-            complexidade=payload.complexidade,
-            mercados=plano["mercados"],
-            perfil_risco=perfil_risco,
-            historico=historico,
-            nomes=nomes,
-            odds=odds,
-        )
-    except Exception:
-        # estorna: custo negativo credita de volta e registra a transação (uma só).
-        sb.rpc("estornar_creditos", {
-            "p_user": user.id, "p_valor": custo,
-            "p_motivo": f"estorno consulta #{query_id}", "p_query_id": query_id,
-        }).execute()
-        sb.table("queries").update({"status": "erro"}).eq("id", query_id).execute()
-        raise HTTPException(500, "Falha ao processar a análise; crédito estornado")
 
     sb.table("queries").update({
         "resultado": resultado, "status": "concluida",

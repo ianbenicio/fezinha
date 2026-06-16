@@ -4,7 +4,7 @@ Rodar: python -m engine.test_contract_v0
 """
 from __future__ import annotations
 
-from .run import analisar_partida
+from .run import analisar_partida, motivo_resultado_nao_operacional, resultado_operacional
 
 
 MODOS_VALIDOS = {"nucleo_apenas", "modelo_only", "fallback_pesos"}
@@ -126,6 +126,36 @@ def test_trace_tem_status_e_qualidade_valida_quando_presente():
 def test_forca_comparativa_explicativa_ou_nula():
     r = _resultado()
     assert r["forca_comparativa"] is None
+
+
+def test_baseline_nao_e_operacional_para_consulta_paga():
+    r = _resultado()
+    assert r["baseline"] is True
+    assert resultado_operacional(r) is False
+    assert "Credito nao debitado" in motivo_resultado_nao_operacional(r)
+
+
+def test_modelo_com_historico_e_operacional():
+    r = analisar_partida(
+        match={
+            "liga": "brasileirao_serie_a",
+            "home_team_id": 1,
+            "away_team_id": 2,
+            "mandante": {"id": 1, "nome": "Mandante FC", "caracteristicas": None},
+            "visitante": {"id": 2, "nome": "Visitante EC", "caracteristicas": None},
+        },
+        complexidade="padrao",
+        mercados=["1x2", "gols", "escanteios"],
+        perfil_risco="moderado",
+        historico=[
+            {"home_team_id": 1, "away_team_id": 3, "placar_casa": 2, "placar_fora": 0},
+            {"home_team_id": 3, "away_team_id": 2, "placar_casa": 1, "placar_fora": 0},
+            {"home_team_id": 1, "away_team_id": 2, "placar_casa": 1, "placar_fora": 1},
+        ],
+        nomes={1: "Mandante FC", 2: "Visitante EC", 3: "Terceiro FC"},
+    )
+    assert r["baseline"] is False
+    assert resultado_operacional(r) is True
 
 
 if __name__ == "__main__":
