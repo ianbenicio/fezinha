@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { apiGet, apiPost } from "@/lib/api";
+import { apiGet, apiPost, ApiError } from "@/lib/api";
 import type { Partida, Resultado } from "@/lib/types";
 import { Banner, EngineModeBanner, NoBanca } from "@/components/states";
 
@@ -54,7 +54,7 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
   const router = useRouter();
   const [partida, setPartida] = useState<Partida | null>(null);
   const [resultado, setResultado] = useState<Resultado | null>(null);
-  const [erro, setErro] = useState<string | null>(null);
+  const [erro, setErro] = useState<{ tone: "error" | "warn"; titulo: string; msg: string } | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [logAberto, setLogAberto] = useState(false);
   const [metaErro, setMetaErro] = useState(false);
@@ -86,7 +86,20 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
       });
       setResultado(r.resultado);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao consultar");
+      const status = e instanceof ApiError ? e.status : 0;
+      const msg = e instanceof Error ? e.message : "Erro ao consultar.";
+      if (status === 409) {
+        // baseline puro: nao e produto confiavel; backend NAO debitou credito
+        setErro({ tone: "warn", titulo: "Análise indisponível para esta partida", msg });
+      } else if (status === 402) {
+        setErro({
+          tone: "warn",
+          titulo: "Saldo insuficiente",
+          msg: "Sem créditos suficientes para esta análise. Nenhum crédito foi debitado.",
+        });
+      } else {
+        setErro({ tone: "error", titulo: "Erro ao consultar", msg });
+      }
     } finally {
       setLoading(null);
     }
@@ -135,7 +148,13 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
         ))}
       </div>
 
-      {erro && <p className="mt-4 text-sm text-red-400">{erro}</p>}
+      {erro && (
+        <div className="mt-4">
+          <Banner tone={erro.tone} titulo={erro.titulo}>
+            {erro.msg}
+          </Banner>
+        </div>
+      )}
 
       {ag && (
         <div className="mt-6 space-y-5">
