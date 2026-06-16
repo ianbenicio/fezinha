@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { apiGet } from "@/lib/api";
+import { Loading, EmptyState, ErrorState } from "@/components/states";
 
 type Noticia = {
   titulo: string; url: string; fonte: string;
@@ -18,6 +19,7 @@ export default function NoticiasPage() {
   const router = useRouter();
   const [news, setNews] = useState<Noticia[]>([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(false);
   const [filtro, setFiltro] = useState<string>("todas");
 
   useEffect(() => {
@@ -25,12 +27,12 @@ export default function NoticiasPage() {
       if (!data.session) { router.replace("/login"); return; }
       apiGet<{ noticias: Noticia[] }>("/catalog/news?limit=50")
         .then((r) => setNews(r.noticias))
-        .catch(() => setNews([]))
+        .catch(() => setErro(true))
         .finally(() => setLoading(false));
     });
   }, [router]);
 
-  if (loading) return <p className="text-white/60">Carregando notícias...</p>;
+  if (loading) return <Loading label="Carregando notícias..." />;
 
   const visiveis = filtro === "todas" ? news : news.filter((n) => n.liga === filtro);
 
@@ -46,8 +48,10 @@ export default function NoticiasPage() {
         </select>
       </div>
 
-      {visiveis.length === 0 ? (
-        <p className="text-white/50">Sem notícias.</p>
+      {erro ? (
+        <ErrorState mensagem="Não foi possível carregar as notícias." onRetry={() => location.reload()} />
+      ) : visiveis.length === 0 ? (
+        <EmptyState titulo="Sem notícias" dica={filtro === "todas" ? undefined : "Tente outro campeonato."} />
       ) : (
         <ul className="space-y-2">
           {visiveis.map((n) => (

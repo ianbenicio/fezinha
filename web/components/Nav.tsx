@@ -40,6 +40,7 @@ export function Nav() {
           {email ? (
             <>
               <Link href="/calendario" className="hover:text-fz-green">Calendário</Link>
+              <Link href="/times" className="hover:text-fz-green">Times</Link>
               <Link href="/historico" className="hover:text-fz-green">Histórico</Link>
               {saldo !== null && (
                 <span className="rounded bg-fz-green/20 px-2 py-1 text-fz-green">

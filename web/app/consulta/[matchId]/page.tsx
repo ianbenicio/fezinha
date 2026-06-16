@@ -1,54 +1,17 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { apiGet, apiPost } from "@/lib/api";
+import type { Partida, Resultado } from "@/lib/types";
+import { Banner, EngineModeBanner, NoBanca } from "@/components/states";
 
 const COMPLEXIDADES = [
   { id: "simples", label: "Simples", custo: 1, desc: "1X2 · só estatístico" },
   { id: "padrao", label: "Padrão", custo: 3, desc: "Todos os mercados + LLM" },
   { id: "premium", label: "Premium", custo: 5, desc: "Completa + múltiplas + relatório" },
 ];
-
-type TeamRef = { nome: string };
-type Partida = {
-  data_hora: string;
-  rodada: number | null;
-  status: string;
-  local?: string;
-  mandante: TeamRef | null;
-  visitante: TeamRef | null;
-};
-
-type TraceItem = {
-  camada: string; topico: string; status: string;
-  resumo?: string; justificativa?: string; fonte?: string;
-  entrada: unknown; saida: unknown;
-};
-
-type ForcaComparativa = {
-  mandante: { ifc: number; leitura: string };
-  visitante: { ifc: number; leitura: string };
-  diferenca_ifc: number;
-  expectativa_mandante: number;
-  leitura: string;
-  adversarios_comuns: { adversario: string; resultado_mandante: string; resultado_visitante: string }[];
-  jogos_no_grafo: number;
-};
-
-type Resultado = {
-  partida?: { mandante: string; visitante: string };
-  baseline?: boolean;
-  forca_comparativa?: ForcaComparativa | null;
-  agregador?: {
-    resultado: {
-      prob_casa: number; prob_empate: number; prob_visitante: number;
-      resultado_mais_provavel: string; placar_provavel: string;
-    };
-    gols: { over_15: number; over_25: number; over_35: number; btts: number };
-    escanteios: { over_85: number; over_95: number; over_105: number };
-  };
-  trace?: TraceItem[];
-};
 
 const LEITURA_COMP: Record<string, string> = {
   vantagem_forte_casa: "Vantagem forte do mandante",
@@ -88,17 +51,31 @@ const STATUS_COR: Record<string, string> = {
 
 export default function ConsultaPage({ params }: { params: Promise<{ matchId: string }> }) {
   const { matchId } = use(params);
+  const router = useRouter();
   const [partida, setPartida] = useState<Partida | null>(null);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [logAberto, setLogAberto] = useState(false);
+  const [metaErro, setMetaErro] = useState(false);
 
   useEffect(() => {
-    apiGet<{ partida: Partida }>(`/catalog/matches/${matchId}`)
-      .then((r) => setPartida(r.partida))
-      .catch(() => setPartida(null));
-  }, [matchId]);
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        router.replace("/login");
+        return;
+      }
+      apiGet<{ partida: Partida }>(`/catalog/matches/${matchId}`)
+        .then((r) => {
+          if (!r?.partida) throw new Error("shape inesperado de /catalog/matches/{id}");
+          setPartida(r.partida);
+        })
+        .catch(() => {
+          setPartida(null);
+          setMetaErro(true);
+        });
+    });
+  }, [matchId, router]);
 
   async function consultar(complexidade: string) {
     setErro(null);
@@ -137,6 +114,12 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
         )}
       </div>
 
+      {metaErro && (
+        <Banner tone="muted" titulo="Metadados indisponíveis">
+          Não foi possível carregar os dados da partida. A análise abaixo ainda funciona.
+        </Banner>
+      )}
+
       <p className="mb-3 text-sm text-white/40">Escolha a profundidade da análise</p>
       <div className="grid gap-3 sm:grid-cols-3">
         {COMPLEXIDADES.map((c) => (
@@ -156,6 +139,27 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
 
       {ag && (
         <div className="mt-6 space-y-5">
+          {/* Estado do motor + confiança + alertas (contract-v0) */}
+          <EngineModeBanner modo={ag.modo} />
+          {resultado?.alertas?.map((a, i) => (
+            <Banner
+              key={i}
+              tone={a.severidade === "bloqueio" ? "error" : a.severidade === "aviso" ? "warn" : "info"}
+              titulo={a.tipo}
+            >
+              {a.descricao}
+            </Banner>
+          ))}
+          {resultado?.indice_confianca && (
+            <p className="text-xs text-white/50">
+              Confiança:{" "}
+              {resultado.indice_confianca.valor == null
+                ? "indisponível"
+                : pct(resultado.indice_confianca.valor)}{" "}
+              · {resultado.indice_confianca.leitura}
+            </p>
+          )}
+
           {/* Força Comparativa (IFC) */}
           {resultado?.forca_comparativa && (() => {
             const fc = resultado.forca_comparativa!;
@@ -163,10 +167,13 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
             const cv = partida?.visitante?.nome ?? "Visitante";
             return (
               <section className="rounded-lg bg-fz-card p-5">
-                <div className="mb-3 flex items-baseline justify-between">
+                <div className="mb-1 flex items-baseline justify-between">
                   <h2 className="font-semibold">Força comparativa</h2>
                   <span className="text-sm text-fz-green">{LEITURA_COMP[fc.leitura] ?? fc.leitura}</span>
                 </div>
+                <p className="mb-3 text-xs text-white/40">
+                  Leitura alternativa — não é a previsão principal.
+                </p>
                 <div className="mb-1 flex justify-between text-sm">
                   <span>{cm}</span><span className="font-bold">{fc.mandante.ifc}<span className="text-white/40">/100</span></span>
                 </div>
@@ -234,11 +241,8 @@ export default function ConsultaPage({ params }: { params: Promise<{ matchId: st
             </div>
           </section>
 
-          {resultado?.baseline && (
-            <p className="rounded bg-yellow-500/10 px-3 py-2 text-xs text-yellow-400">
-              ⚠ Modo baseline — os times ainda não têm força individual (ingestão pendente).
-              Jogos diferentes dão números parecidos por enquanto.
-            </p>
+          {resultado?.banca && resultado.banca.recomendacoes.length === 0 && (
+            <NoBanca nota={resultado.banca.nota} />
           )}
 
           {/* Log / descrição das camadas */}
