@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fezinha.local/schemas/manual_source_batch_v0.schema.json",
+  "title": "manual_source_batch_v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "batch_id",
+    "created_at",
+    "created_by",
+    "source",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "manual_source_batch_v0"
+    },
+    "batch_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "notes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "source_name",
+        "source_url",
+        "source_type",
+        "fetched_at",
+        "quality_score",
+        "status_fonte",
+        "ingestion_method",
+        "source_snapshot_path",
+        "raw_payload_hash"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_type": {
+          "enum": [
+            "oficial_primaria",
+            "api_licenciada",
+            "midia_confiavel",
+            "clube_oficial",
+            "mercado_odds",
+            "meteorologia",
+            "manual_operador",
+            "social_ou_rumor"
+          ]
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "quality_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "status_fonte": {
+          "enum": [
+            "ativo",
+            "manual",
+            "futuro",
+            "quarentena",
+            "bloqueado"
+          ]
+        },
+        "ingestion_method": {
+          "enum": [
+            "manual_json",
+            "manual_csv",
+            "notebooklm",
+            "scraper_html",
+            "pdf",
+            "api"
+          ]
+        },
+        "source_snapshot_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "raw_payload_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "extraction_tool": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "source_snapshot_path": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "properties": {
+            "raw_payload_hash": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record_id",
+          "record_type",
+          "natural_key",
+          "status",
+          "quality_score",
+          "evidence",
+          "payload"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "record_type": {
+            "enum": [
+              "standings",
+              "fixture",
+              "result",
+              "discipline_team",
+              "news",
+              "odds",
+              "absence"
+            ]
+          },
+          "natural_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "quarentena",
+              "conflito",
+              "rejeitado"
+            ]
+          },
+          "quality_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "page": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "line": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "selector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "quote": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 300
+              },
+              "table": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "page"
+                ],
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "line"
+                ],
+                "properties": {
+                  "line": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "selector"
+                ],
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "quote"
+                ],
+                "properties": {
+                  "quote": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                }
+              },
+              {
+                "required": [
+                  "table"
+                ],
+                "properties": {
+                  "table": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

@@ -50,6 +50,55 @@ python -m engine.ingestion.api_football injuries   # lesões/suspensões
 - `stats` processa 15 jogos por execução (cota); rode em dias seguidos até cobrir tudo.
 - Idempotente: re-rodar atualiza, não duplica.
 
+## Coleta manual controlada
+
+Antes de automatizar uma fonte, use o template versionado:
+
+```text
+docs/templates/manual_source_batch_v0.md
+```
+
+O prompt para NotebookLM ou ferramenta equivalente fica em:
+
+```text
+docs/templates/notebooklm-extraction-prompt.md
+```
+
+Valide todo lote antes de qualquer staging ou upsert:
+
+```bash
+python -m engine.ingestion.manual_source_batch docs/templates/manual_source_batch_v0.example.json
+python -m engine.ingestion.manual_source_batch caminho/do/lote.csv --format csv
+```
+
+O validador e somente leitura. Ele checa fonte, evidencia, duplicidade,
+tipos, limites de sanidade e imprime um relatorio. Ele nao grava no Supabase.
+
+## CBF Tabelas HTML
+
+Para classificacao, CA/CV agregado e jogos/resultados da pagina oficial da CBF:
+
+```bash
+python -m engine.ingestion.cbf_tabelas caminho/cbf.html \
+  --liga brasileirao_serie_b \
+  --season 2026 \
+  --round 13 \
+  --source-url https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-b/2026 \
+  --fetched-at 2026-06-15T11:27:00-03:00
+```
+
+Tambem aceita URL como entrada e salva snapshot local em `var/ingestion/snapshots/`:
+
+```bash
+python -m engine.ingestion.cbf_tabelas https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-b/2026 \
+  --liga brasileirao_serie_b \
+  --season 2026 \
+  --round 13
+```
+
+O parser gera um lote `manual_source_batch_v0`, calcula hash do snapshot local e
+valida o lote. Ele ainda nao faz upsert no banco.
+
 ## Agendamento (produção)
 
 Cron — GitHub Actions (grátis) ou worker Railway:

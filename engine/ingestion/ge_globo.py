@@ -24,6 +24,7 @@ import os
 import re
 import sys
 import unicodedata
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -32,6 +33,7 @@ URLS = {
     "brasileirao_serie_a": "https://ge.globo.com/futebol/brasileirao-serie-a/",
     "brasileirao_serie_b": "https://ge.globo.com/futebol/brasileirao-serie-b/",
 }
+SOURCE_ID = "ge_globo"
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/120.0 Safari/537.36")
 
@@ -77,8 +79,30 @@ def _resolver(nome_ge: str, mapa: dict[str, int]) -> int | None:
     return mapa.get(n)
 
 
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _with_source_meta(car: dict[str, Any], liga: str, fields: list[str], fetched_at: str) -> dict[str, Any]:
+    fontes = car.get("_fontes")
+    if not isinstance(fontes, dict):
+        fontes = {}
+    fontes[SOURCE_ID] = {
+        "source_id": SOURCE_ID,
+        "source_url": URLS[liga],
+        "fetched_at": fetched_at,
+        "quality_score": 3,
+        "status_fonte": "ativo",
+        "ingestion_method": "scraper_html_json_embutido",
+        "fields": fields,
+    }
+    car["_fontes"] = fontes
+    return car
+
+
 def sync_classificacao(sb, liga: str) -> None:
     d = buscar(liga)
+    fetched_at = _utc_now()
     mapa = _mapa_times(sb, liga)
     atualizados = 0
     for t in d.get("classificacao", []):
@@ -97,6 +121,22 @@ def sync_classificacao(sb, liga: str) -> None:
             "forma": t.get("ultimos_jogos", []),
             "faixa_cor": t.get("faixa_classificacao_cor"),
         })
+        car = _with_source_meta(
+            car,
+            liga,
+            [
+                "classificacao",
+                "pontos",
+                "jogos",
+                "vitorias",
+                "empates",
+                "derrotas",
+                "gols",
+                "forma",
+                "escudo",
+            ],
+            fetched_at,
+        )
         sb.table("teams").update({
             "escudo_url": t.get("escudo"), "caracteristicas": car,
         }).eq("id", tid).execute()
